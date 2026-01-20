@@ -62,7 +62,7 @@ export const useStore = create<AppState>((set) => ({
   activeVisualization: 'wait-time-analysis',
 
   addMessage: (msg) => set((state) => ({
-    messages: [...state.messages, { ...msg, id: crypto.randomUUID(), timestamp: new Date() }]
+    messages: [...state.messages, { ...msg, id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`, timestamp: new Date() }]
   })),
   setChatLoading: (loading) => set({ isChatLoading: loading }),
   setActiveVisualization: (viz) => set({ activeVisualization: viz }),
