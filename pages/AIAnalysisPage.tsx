@@ -4,15 +4,20 @@ import {
 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { useStore } from '../store';
-import { sendMessageToGemini } from '../services/geminiService';
+import { useChat } from '../hooks/useChat';
 import { clsx } from 'clsx';
 import { useNavigate } from 'react-router-dom';
 
 const AIAnalysisPage = () => {
   const { 
-    messages, addMessage, isChatLoading, setChatLoading, 
+    messages, isChatLoading,
     setActiveVisualization 
   } = useStore();
+  
+  // Use the useChat hook for backend API integration
+  // Requirements: 5.1, 5.2, 5.3, 5.4
+  // Note: The hook handles error display by adding error messages to the chat
+  const { sendMessage } = useChat();
   
   const [inputValue, setInputValue] = React.useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -26,6 +31,16 @@ const AIAnalysisPage = () => {
     scrollToBottom();
   }, [messages]);
 
+  /**
+   * Handle sending a chat message using the backend chat API.
+   * 
+   * Requirements:
+   * - 5.1: POST to /api/chat with query, location_id, and use_semantic parameters
+   * - 5.2: Replace Gemini service with backend chat API
+   * - 5.3: Display loading indicator while waiting
+   * - 5.4: Display error message on failure
+   * - 5.5: Maintain conversation context in the UI
+   */
   const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!inputValue.trim() || isChatLoading) return;
@@ -33,27 +48,12 @@ const AIAnalysisPage = () => {
     const userMsg = inputValue;
     setInputValue('');
     
-    // 1. Add User Message
-    addMessage({
-      role: 'user',
-      content: userMsg,
-    });
-    setChatLoading(true);
-
-    // 2. Call AI Service
-    const response = await sendMessageToGemini(
-      messages.map(m => ({ role: m.role, content: m.content })), 
-      userMsg
-    );
-
-    // 3. Add Assistant Message
-    addMessage({
-      role: 'assistant',
-      content: response.text,
-      suggestedVisualization: response.visualization
-    });
-
-    setChatLoading(false);
+    // The useChat hook handles:
+    // - Adding user message to store
+    // - Calling the backend API
+    // - Adding assistant response to store
+    // - Loading and error states
+    await sendMessage(userMsg);
   };
 
   const handleVisualizationClick = (viz: string) => {
