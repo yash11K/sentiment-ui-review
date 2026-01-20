@@ -3,6 +3,7 @@ import {
   Send, Sparkles, LayoutDashboard 
 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
+import { Citations } from '../components/ui/Citations';
 import { useStore } from '../store';
 import { useChat } from '../hooks/useChat';
 import { clsx } from 'clsx';
@@ -109,6 +110,11 @@ const AIAnalysisPage = () => {
                   : "bg-bg-elevated text-text-secondary border border-white/5 rounded-tl-sm"
               )}>
                 <p className="whitespace-pre-wrap">{msg.content}</p>
+                
+                {/* Citations for assistant messages */}
+                {msg.role === 'assistant' && msg.citations && msg.citations.length > 0 && (
+                  <Citations citations={msg.citations} />
+                )}
                 
                 {/* Visualization Suggestion Link */}
                 {msg.suggestedVisualization && (

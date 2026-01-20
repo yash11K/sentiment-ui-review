@@ -353,13 +353,15 @@ const ReviewsPage = () => {
                 <span className="text-sm font-medium text-text-secondary">{review.author}</span>
               </div>
 
-              <div className="flex gap-2 mb-3">
-                {review.topics.map(topic => (
-                  <Badge key={topic} variant="default" className="bg-bg-base border border-white/5 capitalize">
-                    {topic.replace('_', ' ')}
-                  </Badge>
-                ))}
-              </div>
+              {review.topics && review.topics.length > 0 && (
+                <div className="flex gap-2 mb-3">
+                  {review.topics.map(topic => (
+                    <Badge key={topic} variant="default" className="bg-bg-base border border-white/5 capitalize">
+                      {topic.replace('_', ' ')}
+                    </Badge>
+                  ))}
+                </div>
+              )}
 
               <p className="text-text-secondary leading-relaxed text-sm">
                 "{review.content}"

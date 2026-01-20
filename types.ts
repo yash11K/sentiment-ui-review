@@ -33,12 +33,19 @@ export interface TopicData {
   sentiment: 'positive' | 'negative' | 'neutral';
 }
 
+export interface ChatCitation {
+  text: string;
+  score: number;
+  location?: string;
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
   suggestedVisualization?: VisualizationTag;
+  citations?: ChatCitation[];
 }
 
 export interface VisualizationConfig {

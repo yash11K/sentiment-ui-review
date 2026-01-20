@@ -127,7 +127,7 @@ export function transformReview(apiReview: ApiReview): Review {
     date: formatDate(apiReview.review_date),
     content: apiReview.review_text,
     sentiment: apiReview.sentiment,
-    topics: apiReview.topics,
+    topics: apiReview.topics ?? [],
   };
 }
 

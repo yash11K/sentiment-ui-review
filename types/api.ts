@@ -130,12 +130,24 @@ export interface LocationsResponse {
 }
 
 /**
- * Chat Response Source
+ * Chat Citation Location
  */
-export interface ChatSource {
-  review_id: number;
+export interface ChatCitationLocation {
+  type: string;
+  s3Location?: {
+    uri: string;
+  };
+}
+
+/**
+ * Chat Citation
+ * Individual citation from the knowledge base
+ */
+export interface ChatCitation {
   text: string;
-  relevance_score: number;
+  score: number;
+  location: ChatCitationLocation;
+  metadata?: Record<string, string>;
 }
 
 /**
@@ -143,8 +155,9 @@ export interface ChatSource {
  * Returned by POST /api/chat
  */
 export interface ChatResponse {
-  response: string;
-  sources?: ChatSource[];
+  answer: string;
+  citations: ChatCitation[];
+  source: string;
 }
 
 // ============================================================================

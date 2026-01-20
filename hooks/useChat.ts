@@ -13,6 +13,7 @@
 import { useState, useCallback } from 'react';
 import { sendChatMessage } from '../services/apiService';
 import { useStore } from '../store';
+import type { ChatCitation } from '../types';
 
 interface UseChatResult {
   sendMessage: (query: string) => Promise<void>;
@@ -27,7 +28,7 @@ interface UseChatResult {
  * - Sends chat messages via the API
  * - Handles loading state (Requirement 5.3)
  * - Handles error state (Requirement 5.4)
- * - Adds the response to the messages in the store
+ * - Adds the response to the messages in the store with citations
  * 
  * @returns Object containing sendMessage function, loading state, and error state
  */
@@ -70,10 +71,18 @@ export function useChat(): UseChatResult {
       // Requirement 5.1: POST to /api/chat with query, location_id, and use_semantic parameters
       const response = await sendChatMessage(query, currentLocation, true);
 
-      // Add assistant response to the store
+      // Transform citations from API response
+      const citations: ChatCitation[] = response.citations?.map((c) => ({
+        text: c.text,
+        score: c.score,
+        location: c.location?.s3Location?.uri,
+      })) || [];
+
+      // Add assistant response to the store with citations
       addMessage({
         role: 'assistant',
-        content: response.response,
+        content: response.answer,
+        citations: citations.length > 0 ? citations : undefined,
       });
     } catch (err) {
       // Requirement 5.4: Handle errors

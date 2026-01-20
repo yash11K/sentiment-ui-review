@@ -54,18 +54,10 @@ interface AppState {
 }
 
 export const useStore = create<AppState>((set) => ({
-  currentLocation: 'JFK Terminal 4',
+  currentLocation: 'JFK',
   setLocation: (loc) => set({ currentLocation: loc }),
 
-  messages: [
-    {
-      id: 'init-1',
-      role: 'assistant',
-      content: "Hello! I'm AutoInsights. I've analyzed the latest reviews for JFK Terminal 4. I noticed a spike in wait time complaints between 5 PM and 7 PM. Would you like to see the details?",
-      timestamp: new Date(),
-      suggestedVisualization: 'wait-time-analysis'
-    }
-  ],
+  messages: [],
   isChatLoading: false,
   activeVisualization: 'wait-time-analysis',
 
