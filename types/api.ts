@@ -122,11 +122,23 @@ export interface ReviewsResponse {
 }
 
 /**
+ * Location object with coordinates
+ * Returned as part of LocationsResponse
+ */
+export interface Location {
+  location_id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  address: string;
+}
+
+/**
  * Locations Response
  * Returned by GET /api/locations
  */
 export interface LocationsResponse {
-  locations: string[];
+  locations: Location[];
 }
 
 /**

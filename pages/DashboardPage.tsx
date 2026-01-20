@@ -426,7 +426,7 @@ const DashboardPage = () => {
           </div>
           <div className="flex-1 w-full min-h-[250px]">
             {topicDistributionData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={200}>
                 <BarChart data={topicDistributionData} margin={{top: 20, right: 30, left: 20, bottom: 5}}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#2D3640" vertical={false} />
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6B7785', fontSize: 11}} />
@@ -462,7 +462,7 @@ const DashboardPage = () => {
           <div className="flex-1 relative">
             {sentimentData.length > 0 ? (
               <>
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={200}>
                   <PieChart>
                     <Pie
                       data={sentimentData}
@@ -518,7 +518,7 @@ const DashboardPage = () => {
           </div>
           <div className="flex-1 w-full min-h-[300px]">
             {trendData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={200}>
                 <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorPos" x1="0" y1="0" x2="0" y2="1">

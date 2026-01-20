@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { VisualizationTag, ChatMessage, Review } from './types';
-import { DashboardSummary, TrendsResponse, TopicsResponse, SentimentResponse } from './types/api';
+import { DashboardSummary, TrendsResponse, TopicsResponse, SentimentResponse, Location } from './types/api';
 
 /**
  * Dashboard data structure for partial updates
@@ -28,9 +28,9 @@ interface AppState {
   clearChat: () => void;
   
   // Locations State (Requirements: 6.2)
-  locations: string[];
+  locations: Location[];
   locationsLoading: boolean;
-  setLocations: (locations: string[]) => void;
+  setLocations: (locations: Location[]) => void;
   setLocationsLoading: (loading: boolean) => void;
   
   // Dashboard Data State (Requirements: 7.1)
