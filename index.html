@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AutoInsights - Station Manager Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              bg: {
+                base: '#0F1419',
+                elevated: '#1A1F26',
+                surface: '#242B35',
+                hover: '#2D3640',
+                active: '#363F4A',
+              },
+              text: {
+                primary: '#FFFFFF',
+                secondary: '#A8B3C0',
+                tertiary: '#6B7785',
+                muted: '#4A5462',
+              },
+              accent: {
+                primary: '#22B8A0',
+                'primary-hover': '#1DA088',
+                'primary-muted': 'rgba(34, 184, 160, 0.15)',
+              },
+              sentiment: {
+                positive: '#4ADE80',
+                'positive-muted': 'rgba(74, 222, 128, 0.15)',
+                negative: '#F87171',
+                'negative-muted': 'rgba(248, 113, 113, 0.15)',
+                neutral: '#FBBF24',
+                'neutral-muted': 'rgba(251, 191, 36, 0.15)',
+              },
+              status: {
+                warning: '#FB923C',
+                'warning-muted': 'rgba(251, 146, 60, 0.15)',
+                info: '#60A5FA',
+                'info-muted': 'rgba(96, 165, 250, 0.15)',
+              },
+              chart: {
+                1: '#22B8A0',
+                2: '#60A5FA',
+                3: '#A78BFA',
+                4: '#F472B6',
+                5: '#FBBF24',
+                6: '#34D399',
+              }
+            },
+            fontFamily: {
+              display: ['DM Sans', 'system-ui', 'sans-serif'],
+              body: ['Inter', 'system-ui', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+            },
+            animation: {
+              'fade-in': 'fadeIn 0.5s ease-out',
+              'slide-up': 'slideUp 0.5s ease-out',
+              'pulse-slow': 'pulse 3s infinite',
+            },
+            keyframes: {
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              slideUp: {
+                '0%': { opacity: '0', transform: 'translateY(10px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+            }
+          },
+        },
+      };
+    </script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap');
+      
+      body {
+        background-color: #0F1419;
+        color: #FFFFFF;
+        font-family: 'Inter', sans-serif;
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #1A1F26; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #363F4A; 
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #4A5462; 
+      }
+      
+      .glass-panel {
+        background: rgba(26, 31, 38, 0.8);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "@google/genai": "https://esm.sh/@google/genai@^1.37.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "clsx": "https://esm.sh/clsx@^2.1.1",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.12.0",
+    "recharts": "https://esm.sh/recharts@^3.6.0",
+    "zustand": "https://esm.sh/zustand@^5.0.10",
+    "tailwind-merge": "https://esm.sh/tailwind-merge@^3.4.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
