@@ -11,50 +11,61 @@
           extend: {
             colors: {
               bg: {
-                base: '#0F1419',
-                elevated: '#1A1F26',
-                surface: '#242B35',
-                hover: '#2D3640',
-                active: '#363F4A',
+                base: '#FAFAFA',
+                elevated: '#FFFFFF',
+                surface: '#F3F0FF',
+                hover: '#EDE9FE',
+                active: '#DDD6FE',
               },
               text: {
-                primary: '#FFFFFF',
-                secondary: '#A8B3C0',
-                tertiary: '#6B7785',
-                muted: '#4A5462',
+                primary: '#1F1F1F',
+                secondary: '#4B5563',
+                tertiary: '#6B7280',
+                muted: '#9CA3AF',
               },
               accent: {
-                primary: '#22B8A0',
-                'primary-hover': '#1DA088',
-                'primary-muted': 'rgba(34, 184, 160, 0.15)',
+                primary: '#7C3AED',
+                'primary-hover': '#6D28D9',
+                'primary-muted': 'rgba(124, 58, 237, 0.12)',
               },
               sentiment: {
-                positive: '#4ADE80',
-                'positive-muted': 'rgba(74, 222, 128, 0.15)',
-                negative: '#F87171',
-                'negative-muted': 'rgba(248, 113, 113, 0.15)',
-                neutral: '#FBBF24',
-                'neutral-muted': 'rgba(251, 191, 36, 0.15)',
+                positive: '#10B981',
+                'positive-muted': 'rgba(16, 185, 129, 0.12)',
+                negative: '#EF4444',
+                'negative-muted': 'rgba(239, 68, 68, 0.12)',
+                neutral: '#F59E0B',
+                'neutral-muted': 'rgba(245, 158, 11, 0.12)',
               },
               status: {
-                warning: '#FB923C',
-                'warning-muted': 'rgba(251, 146, 60, 0.15)',
-                info: '#60A5FA',
-                'info-muted': 'rgba(96, 165, 250, 0.15)',
+                warning: '#F97316',
+                'warning-muted': 'rgba(249, 115, 22, 0.12)',
+                info: '#3B82F6',
+                'info-muted': 'rgba(59, 130, 246, 0.12)',
               },
               chart: {
-                1: '#22B8A0',
-                2: '#60A5FA',
+                1: '#7C3AED',
+                2: '#8B5CF6',
                 3: '#A78BFA',
-                4: '#F472B6',
-                5: '#FBBF24',
-                6: '#34D399',
+                4: '#C4B5FD',
+                5: '#6D28D9',
+                6: '#5B21B6',
               }
             },
             fontFamily: {
-              display: ['DM Sans', 'system-ui', 'sans-serif'],
-              body: ['Inter', 'system-ui', 'sans-serif'],
+              display: ['JetBrains Mono', 'monospace'],
+              body: ['JetBrains Mono', 'monospace'],
               mono: ['JetBrains Mono', 'monospace'],
+            },
+            borderRadius: {
+              'none': '0',
+              'sm': '2px',
+              'DEFAULT': '4px',
+              'md': '4px',
+              'lg': '4px',
+              'xl': '4px',
+              '2xl': '4px',
+              '3xl': '4px',
+              'full': '4px',
             },
             animation: {
               'fade-in': 'fadeIn 0.5s ease-out',
@@ -81,34 +92,34 @@
       };
     </script>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
       
       body {
-        background-color: #0F1419;
-        color: #FFFFFF;
-        font-family: 'Inter', sans-serif;
+        background-color: #FAFAFA;
+        color: #1F1F1F;
+        font-family: 'JetBrains Mono', monospace;
       }
 
-      /* Custom Scrollbar */
+      /* Custom Scrollbar - Purple theme */
       ::-webkit-scrollbar {
         width: 8px;
         height: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: #1A1F26; 
+        background: #F3F0FF; 
       }
       ::-webkit-scrollbar-thumb {
-        background: #363F4A; 
-        border-radius: 4px;
+        background: #A78BFA; 
+        border-radius: 2px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #4A5462; 
+        background: #7C3AED; 
       }
       
       .glass-panel {
-        background: rgba(26, 31, 38, 0.8);
+        background: rgba(255, 255, 255, 0.9);
         backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        border: 2px solid #7C3AED;
       }
     </style>
   <script type="importmap">

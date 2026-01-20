@@ -20,8 +20,8 @@ export const Card: React.FC<CardProps> = ({
   padding = 'md',
 }) => {
   const variants = {
-    default: "bg-bg-elevated border border-white/5",
-    elevated: "bg-bg-elevated border border-white/5 shadow-xl",
+    default: "bg-bg-elevated border-2 border-accent-primary/20",
+    elevated: "bg-bg-elevated border-2 border-accent-primary shadow-lg shadow-accent-primary/10",
     glass: "glass-panel",
   };
 
@@ -33,7 +33,7 @@ export const Card: React.FC<CardProps> = ({
   };
 
   return (
-    <div className={cn("rounded-2xl transition-all duration-200", variants[variant], paddings[padding], className)}>
+    <div className={cn("rounded-none transition-all duration-200", variants[variant], paddings[padding], className)}>
       {children}
     </div>
   );

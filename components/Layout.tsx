@@ -35,17 +35,17 @@ const Layout = () => {
       
       <main className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarCollapsed ? 'ml-20' : 'ml-64'}`}>
         {/* Top Header */}
-        <header className="min-h-[5rem] border-b border-white/5 bg-bg-base/80 backdrop-blur-md sticky top-0 z-40 flex items-center justify-between px-8 py-3">
+        <header className="min-h-[5rem] border-b-2 border-accent-primary/20 bg-bg-base/80 backdrop-blur-md sticky top-0 z-40 flex items-center justify-between px-8 py-3">
           
           {/* Location Picker Button */}
           <button 
-            className="flex items-center gap-3 p-2 rounded-xl bg-bg-elevated hover:bg-bg-hover transition-colors border border-white/5 group"
+            className="flex items-center gap-3 p-2 rounded-none bg-bg-elevated hover:bg-bg-hover transition-colors border-2 border-accent-primary/20 hover:border-accent-primary group"
             onClick={() => setIsLocationSelectorOpen(true)}
             aria-label="Select location"
           >
             {/* Mini Map Preview */}
             {currentLocationObj ? (
-              <div className="w-16 h-12 rounded-lg overflow-hidden border border-white/10 flex-shrink-0">
+              <div className="w-16 h-12 rounded-none overflow-hidden border-2 border-accent-primary/30 flex-shrink-0">
                 <MiniMap 
                   latitude={currentLocationObj.latitude} 
                   longitude={currentLocationObj.longitude}
@@ -53,7 +53,7 @@ const Layout = () => {
                 />
               </div>
             ) : (
-              <div className="w-16 h-12 rounded-lg bg-bg-surface flex items-center justify-center flex-shrink-0">
+              <div className="w-16 h-12 rounded-none bg-bg-surface flex items-center justify-center flex-shrink-0 border-2 border-accent-primary/30">
                 <MapPin size={20} className="text-accent-primary" />
               </div>
             )}
@@ -75,9 +75,9 @@ const Layout = () => {
           </button>
 
           <div className="flex items-center gap-4">
-            <button className="p-2 text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-full transition-colors relative">
+            <button className="p-2 text-text-secondary hover:text-accent-primary hover:bg-bg-hover rounded-none transition-colors relative border-2 border-transparent hover:border-accent-primary/30">
               <Bell size={20} />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-status-warning rounded-full border-2 border-bg-base"></span>
+              <span className="absolute top-2 right-2 w-2 h-2 bg-status-warning rounded-none border-2 border-bg-base"></span>
             </button>
           </div>
         </header>

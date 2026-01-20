@@ -32,16 +32,16 @@ export function MiniMap({ latitude, longitude, className = '' }: MiniMapProps) {
         keyboard: false,
       }).setView([latitude, longitude], 11);
 
-      // Dark tile layer
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 19,
+      // Light tile layer for white/purple theme
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 13,
       }).addTo(mapInstanceRef.current);
 
-      // Add a subtle marker/circle for the location
+      // Add a subtle marker/circle for the location - purple theme
       L.circleMarker([latitude, longitude], {
         radius: 6,
-        fillColor: '#22B8A0',
-        color: '#22B8A0',
+        fillColor: '#7C3AED',
+        color: '#7C3AED',
         weight: 2,
         opacity: 1,
         fillOpacity: 0.8,
@@ -59,8 +59,8 @@ export function MiniMap({ latitude, longitude, className = '' }: MiniMapProps) {
       
       L.circleMarker([latitude, longitude], {
         radius: 6,
-        fillColor: '#22B8A0',
-        color: '#22B8A0',
+        fillColor: '#7C3AED',
+        color: '#7C3AED',
         weight: 2,
         opacity: 1,
         fillOpacity: 0.8,
@@ -79,7 +79,7 @@ export function MiniMap({ latitude, longitude, className = '' }: MiniMapProps) {
   return (
     <div 
       ref={mapRef} 
-      className={`rounded overflow-hidden ${className}`}
+      className={`rounded-none overflow-hidden ${className}`}
       style={{ minWidth: 40, minHeight: 40 }}
     />
   );

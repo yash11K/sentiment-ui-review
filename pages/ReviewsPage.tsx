@@ -135,7 +135,7 @@ const ReviewsPage = () => {
         
         {/* Skeleton Table */}
         <Card padding="none" className="overflow-hidden">
-          <div className="bg-bg-surface px-4 py-3 border-b border-white/5">
+          <div className="bg-bg-surface px-4 py-3 border-b-2 border-accent-primary/20">
             <div className="flex gap-4">
               <Skeleton variant="text" width={100} height={16} />
               <Skeleton variant="text" width={80} height={16} />
@@ -144,7 +144,7 @@ const ReviewsPage = () => {
             </div>
           </div>
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="px-4 py-4 border-b border-white/5">
+            <div key={i} className="px-4 py-4 border-b-2 border-accent-primary/10">
               <div className="flex gap-4 items-start">
                 <Skeleton variant="text" width={100} height={14} />
                 <Skeleton variant="text" width={70} height={14} />
@@ -196,12 +196,12 @@ const ReviewsPage = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search reviews by content, author, or topic..." 
-            className="w-full bg-bg-base border border-white/10 rounded-xl pl-10 pr-10 py-3 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent-primary focus:ring-1 focus:ring-accent-primary/50 outline-none transition-all"
+            className="w-full bg-bg-base border-2 border-accent-primary/20 rounded-none pl-10 pr-10 py-3 text-sm text-text-primary placeholder:text-text-tertiary focus:border-accent-primary focus:ring-1 focus:ring-accent-primary/50 outline-none transition-all"
           />
           {searchQuery && (
             <button 
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-primary transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-accent-primary transition-colors"
             >
               <X size={16} />
             </button>
@@ -220,13 +220,13 @@ const ReviewsPage = () => {
             <button
               key={rating}
               onClick={() => setRatingFilter(ratingFilter === rating ? null : rating)}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-none text-xs font-medium border-2 transition-all ${
                 ratingFilter === rating
-                  ? 'bg-yellow-400/20 text-yellow-400 border-yellow-400/50'
-                  : 'bg-bg-surface text-text-secondary border-white/10 hover:border-white/20'
+                  ? 'bg-yellow-400/20 text-yellow-600 border-yellow-400/50'
+                  : 'bg-bg-surface text-text-secondary border-accent-primary/20 hover:border-accent-primary/40'
               }`}
             >
-              <Star size={12} className={ratingFilter === rating ? 'fill-yellow-400' : ''} />
+              <Star size={12} className={ratingFilter === rating ? 'fill-yellow-500' : ''} />
               {rating}
             </button>
           ))}
@@ -235,7 +235,7 @@ const ReviewsPage = () => {
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-status-warning/10 text-status-warning border border-status-warning/30 hover:bg-status-warning/20 transition-all ml-auto"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-none text-xs font-medium bg-status-warning/10 text-status-warning border-2 border-status-warning/30 hover:bg-status-warning/20 transition-all ml-auto"
             >
               <RotateCcw size={12} />
               Clear All
@@ -268,12 +268,12 @@ const ReviewsPage = () => {
           <div className="overflow-x-auto">
             <table className="w-full">
               {/* Table Header */}
-              <thead className="bg-bg-surface border-b border-white/5">
+              <thead className="bg-bg-surface border-b-2 border-accent-primary/20">
                 <tr>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-text-tertiary uppercase tracking-wider w-32">
                     <button 
                       onClick={() => handleSort('date')}
-                      className="flex items-center gap-1 group hover:text-text-primary transition-colors"
+                      className="flex items-center gap-1 group hover:text-accent-primary transition-colors"
                     >
                       Date
                       <SortIndicator field="date" />
@@ -282,7 +282,7 @@ const ReviewsPage = () => {
                   <th className="text-left px-4 py-3 text-xs font-semibold text-text-tertiary uppercase tracking-wider w-24">
                     <button 
                       onClick={() => handleSort('rating')}
-                      className="flex items-center gap-1 group hover:text-text-primary transition-colors"
+                      className="flex items-center gap-1 group hover:text-accent-primary transition-colors"
                     >
                       Rating
                       <SortIndicator field="rating" />
@@ -295,7 +295,7 @@ const ReviewsPage = () => {
               </thead>
               
               {/* Table Body */}
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y-2 divide-accent-primary/10">
                 {sortedReviews.map((review) => (
                   <tr 
                     key={review.id} 

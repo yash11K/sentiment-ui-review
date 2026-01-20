@@ -26,15 +26,15 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   animation = 'pulse',
 }) => {
   const variants = {
-    text: 'rounded',
-    circular: 'rounded-full',
+    text: 'rounded-none',
+    circular: 'rounded-none',
     rectangular: 'rounded-none',
-    rounded: 'rounded-xl',
+    rounded: 'rounded-none',
   };
 
   const animations = {
     pulse: 'animate-pulse',
-    wave: 'animate-shimmer bg-gradient-to-r from-transparent via-white/5 to-transparent bg-[length:200%_100%]',
+    wave: 'animate-shimmer bg-gradient-to-r from-transparent via-accent-primary/10 to-transparent bg-[length:200%_100%]',
     none: '',
   };
 
@@ -46,7 +46,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   return (
     <div
       className={cn(
-        'bg-white/5',
+        'bg-accent-primary/10',
         variants[variant],
         animations[animation],
         className
@@ -59,7 +59,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
 
 /** Pre-built skeleton for KPI cards */
 export const SkeletonKPICard: React.FC<{ className?: string }> = ({ className }) => (
-  <div className={cn('p-5 rounded-2xl bg-bg-elevated border border-white/5', className)}>
+  <div className={cn('p-5 rounded-none bg-bg-elevated border-2 border-accent-primary/20', className)}>
     <div className="flex justify-between items-start mb-4">
       <Skeleton variant="rounded" width={48} height={48} />
       <Skeleton variant="rounded" width={60} height={24} />
@@ -76,7 +76,7 @@ export const SkeletonChartCard: React.FC<{ className?: string; height?: number }
   className, 
   height = 300 
 }) => (
-  <div className={cn('p-6 rounded-2xl bg-bg-elevated border border-white/5', className)}>
+  <div className={cn('p-6 rounded-none bg-bg-elevated border-2 border-accent-primary/20', className)}>
     <div className="flex justify-between items-center mb-6">
       <div className="space-y-2">
         <Skeleton variant="text" width={150} height={20} />
@@ -90,7 +90,7 @@ export const SkeletonChartCard: React.FC<{ className?: string; height?: number }
 
 /** Pre-built skeleton for review cards */
 export const SkeletonReviewCard: React.FC<{ className?: string }> = ({ className }) => (
-  <div className={cn('p-6 rounded-2xl bg-bg-elevated border border-white/5', className)}>
+  <div className={cn('p-6 rounded-none bg-bg-elevated border-2 border-accent-primary/20', className)}>
     <div className="flex justify-between items-start mb-3">
       <div className="flex items-center gap-3">
         <Skeleton variant="text" width={80} height={14} />

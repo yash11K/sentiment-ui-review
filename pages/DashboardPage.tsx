@@ -26,14 +26,14 @@ import { useDashboardData, TrendsPeriod } from '../hooks/useDashboardData';
 import { useStore } from '../store';
 import type { TrendsResponse, TopicsResponse, SentimentResponse } from '../types/api';
 
-// Color palette for topics
-const TOPIC_COLORS = ['#22B8A0', '#60A5FA', '#FBBF24', '#F87171', '#A78BFA', '#34D399'];
+// Color palette for topics - Purple theme
+const TOPIC_COLORS = ['#7C3AED', '#8B5CF6', '#A78BFA', '#C4B5FD', '#6D28D9', '#5B21B6'];
 
 // Sentiment colors
 const SENTIMENT_COLORS = {
-  positive: '#4ADE80',
-  neutral: '#FBBF24',
-  negative: '#F87171',
+  positive: '#10B981',
+  neutral: '#F59E0B',
+  negative: '#EF4444',
 };
 
 // Period options for the dropdown
@@ -252,7 +252,7 @@ const DashboardPage = () => {
     return (
       <div className="space-y-6 animate-fade-in pb-10">
         {/* Skeleton Alert Banner */}
-        <div className="rounded-xl bg-bg-elevated p-4 flex items-center gap-4">
+        <div className="rounded-none bg-bg-elevated p-4 flex items-center gap-4 border-2 border-accent-primary/20">
           <Skeleton variant="rounded" width={48} height={48} />
           <div className="flex-1 space-y-2">
             <Skeleton variant="text" width={200} height={20} />
@@ -288,7 +288,7 @@ const DashboardPage = () => {
         {/* Skeleton Second Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <SkeletonChartCard className="lg:col-span-2" height={300} />
-          <div className="p-6 rounded-2xl bg-bg-elevated border border-white/5 space-y-6">
+          <div className="p-6 rounded-none bg-bg-elevated border-2 border-accent-primary/20 space-y-6">
             <div className="space-y-2">
               <Skeleton variant="text" width={120} height={20} />
               <Skeleton variant="text" width={150} height={14} />
@@ -324,10 +324,10 @@ const DashboardPage = () => {
     <div className="space-y-6 animate-fade-in pb-10">
       
       {/* Smart Alert Banner */}
-      <div className="rounded-xl border-l-4 border-status-warning bg-bg-elevated p-4 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative overflow-hidden">
+      <div className="rounded-none border-l-4 border-status-warning bg-bg-elevated p-4 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative overflow-hidden border-2 border-status-warning/30">
         <div className="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-status-warning/10 to-transparent pointer-events-none" />
         <div className="flex items-start gap-4 z-10">
-          <div className="p-2 bg-status-warning/20 rounded-lg text-status-warning shrink-0">
+          <div className="p-2 bg-status-warning/20 rounded-none text-status-warning shrink-0">
             <AlertTriangle size={24} />
           </div>
           <div>
@@ -366,12 +366,12 @@ const DashboardPage = () => {
               {currentPeriodLabel}
             </Button>
             {showPeriodDropdown && (
-              <div className="absolute right-0 mt-2 w-32 bg-bg-elevated border border-white/10 rounded-lg shadow-lg z-10">
+              <div className="absolute right-0 mt-2 w-32 bg-bg-elevated border-2 border-accent-primary rounded-none shadow-lg z-10">
                 {PERIOD_OPTIONS.map((option) => (
                   <button
                     key={option.value}
                     className={clsx(
-                      "w-full px-4 py-2 text-left text-sm hover:bg-bg-surface transition-colors first:rounded-t-lg last:rounded-b-lg",
+                      "w-full px-4 py-2 text-left text-sm hover:bg-bg-surface transition-colors",
                       period === option.value ? "text-accent-primary bg-bg-surface" : "text-text-secondary"
                     )}
                     onClick={() => {
@@ -394,12 +394,12 @@ const DashboardPage = () => {
       {/* KPI Grid - Uses real API data from summary (Requirement 3.1) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpiData.map((kpi, idx) => (
-          <Card key={idx} className="p-5 hover:border-white/10 transition-colors group">
+          <Card key={idx} className="p-5 hover:border-accent-primary transition-colors group">
             <div className="flex justify-between items-start mb-4">
-              <div className={clsx("p-3 rounded-xl transition-colors group-hover:scale-110 duration-200", kpi.bg)}>
+              <div className={clsx("p-3 rounded-none transition-colors group-hover:scale-110 duration-200", kpi.bg)}>
                 <kpi.icon className={kpi.color} size={24} />
               </div>
-              <span className={clsx("text-xs font-medium px-2 py-1 rounded-full", kpi.sub.includes('↗') ? 'bg-green-500/10 text-green-400' : kpi.sub.includes('↘') ? 'bg-red-500/10 text-red-400' : 'bg-gray-500/10 text-gray-400')}>
+              <span className={clsx("text-xs font-medium px-2 py-1 rounded-none", kpi.sub.includes('↗') ? 'bg-green-500/10 text-green-600' : kpi.sub.includes('↘') ? 'bg-red-500/10 text-red-600' : 'bg-gray-500/10 text-gray-600')}>
                 {kpi.sub}
               </span>
             </div>
@@ -428,14 +428,14 @@ const DashboardPage = () => {
             {topicDistributionData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={200}>
                 <BarChart data={topicDistributionData} margin={{top: 20, right: 30, left: 20, bottom: 5}}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2D3640" vertical={false} />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6B7785', fontSize: 11}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#6B7785'}} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6B7280', fontSize: 11}} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#6B7280'}} />
                   <Tooltip 
-                    cursor={{fill: '#242B35'}}
-                    contentStyle={{backgroundColor: '#1A1F26', borderColor: 'rgba(255,255,255,0.1)', color: '#fff'}} 
+                    cursor={{fill: '#F3F0FF'}}
+                    contentStyle={{backgroundColor: '#FFFFFF', borderColor: '#7C3AED', borderWidth: 2, color: '#1F1F1F'}} 
                   />
-                  <Bar dataKey="count" name="Reviews" radius={[4,4,0,0]} barSize={40}>
+                  <Bar dataKey="count" name="Reviews" radius={[0,0,0,0]} barSize={40}>
                     {topicDistributionData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
@@ -477,7 +477,7 @@ const DashboardPage = () => {
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{backgroundColor: '#1A1F26', borderColor: 'rgba(255,255,255,0.1)'}} />
+                    <Tooltip contentStyle={{backgroundColor: '#FFFFFF', borderColor: '#7C3AED', borderWidth: 2}} />
                     <Legend verticalAlign="bottom" height={36} iconType="circle" />
                   </PieChart>
                 </ResponsiveContainer>
@@ -507,11 +507,11 @@ const DashboardPage = () => {
             </div>
             <div className="flex gap-4 text-sm">
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-accent-primary"></span>
+                <span className="w-3 h-3 rounded-none bg-accent-primary"></span>
                 <span className="text-text-secondary">Positive</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-sentiment-negative"></span>
+                <span className="w-3 h-3 rounded-none bg-sentiment-negative"></span>
                 <span className="text-text-secondary">Negative</span>
               </div>
             </div>
@@ -522,23 +522,23 @@ const DashboardPage = () => {
                 <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorPos" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#22B8A0" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#22B8A0" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#7C3AED" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#7C3AED" stopOpacity={0}/>
                     </linearGradient>
                     <linearGradient id="colorNeg" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#F87171" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#F87171" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#EF4444" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#2D3640" vertical={false} />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6B7785', fontSize: 12}} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#6B7785', fontSize: 12}} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6B7280', fontSize: 12}} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#6B7280', fontSize: 12}} />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: '#1A1F26', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
-                    itemStyle={{ color: '#fff' }}
+                    contentStyle={{ backgroundColor: '#FFFFFF', border: '2px solid #7C3AED', borderRadius: '0px' }}
+                    itemStyle={{ color: '#1F1F1F' }}
                   />
-                  <Area type="monotone" dataKey="positive" stroke="#22B8A0" strokeWidth={3} fillOpacity={1} fill="url(#colorPos)" />
-                  <Area type="monotone" dataKey="negative" stroke="#F87171" strokeWidth={3} fillOpacity={1} fill="url(#colorNeg)" />
+                  <Area type="monotone" dataKey="positive" stroke="#7C3AED" strokeWidth={3} fillOpacity={1} fill="url(#colorPos)" />
+                  <Area type="monotone" dataKey="negative" stroke="#EF4444" strokeWidth={3} fillOpacity={1} fill="url(#colorNeg)" />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
@@ -560,12 +560,12 @@ const DashboardPage = () => {
               topicData.map((topic, idx) => (
                 <div key={idx} className="space-y-2 group cursor-pointer">
                   <div className="flex justify-between text-sm font-medium">
-                    <span className="text-text-secondary group-hover:text-text-primary transition-colors">{topic.name}</span>
+                    <span className="text-text-secondary group-hover:text-accent-primary transition-colors">{topic.name}</span>
                     <span className="text-text-primary">{topic.value}%</span>
                   </div>
-                  <div className="h-2 w-full bg-bg-surface rounded-full overflow-hidden">
+                  <div className="h-2 w-full bg-bg-surface rounded-none overflow-hidden">
                     <div 
-                      className="h-full rounded-full transition-all duration-500 ease-out group-hover:brightness-110" 
+                      className="h-full rounded-none transition-all duration-500 ease-out group-hover:brightness-110" 
                       style={{ width: `${topic.value}%`, backgroundColor: topic.color }}
                     />
                   </div>

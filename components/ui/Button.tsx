@@ -25,16 +25,16 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const variants = {
-    primary: "bg-accent-primary text-white hover:bg-accent-primary-hover focus:ring-accent-primary shadow-lg shadow-accent-primary/20",
-    secondary: "bg-bg-surface text-text-primary border border-white/10 hover:bg-bg-hover focus:ring-white/20",
-    ghost: "text-text-secondary hover:text-text-primary hover:bg-bg-hover",
-    danger: "bg-sentiment-negative text-white hover:bg-red-600 focus:ring-red-500",
+    primary: "bg-accent-primary text-white hover:bg-accent-primary-hover focus:ring-accent-primary shadow-lg shadow-accent-primary/20 border-2 border-accent-primary",
+    secondary: "bg-bg-surface text-text-primary border-2 border-accent-primary/30 hover:bg-bg-hover hover:border-accent-primary focus:ring-accent-primary/20",
+    ghost: "text-text-secondary hover:text-accent-primary hover:bg-bg-surface border-2 border-transparent hover:border-accent-primary/20",
+    danger: "bg-sentiment-negative text-white hover:bg-red-600 focus:ring-red-500 border-2 border-sentiment-negative",
   };
 
   const sizes = {
-    sm: "px-3 py-1.5 text-xs rounded-md gap-1.5",
-    md: "px-4 py-2 text-sm rounded-lg gap-2",
-    lg: "px-6 py-3 text-base rounded-xl gap-2",
+    sm: "px-3 py-1.5 text-xs rounded-none gap-1.5",
+    md: "px-4 py-2 text-sm rounded-none gap-2",
+    lg: "px-6 py-3 text-base rounded-none gap-2",
   };
 
   return (

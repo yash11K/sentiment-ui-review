@@ -14,9 +14,9 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
-// Custom marker icon for selected location
+// Custom marker icon for selected location - using violet/purple
 const selectedIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
   iconSize: [25, 41],
   iconAnchor: [12, 41],
@@ -141,16 +141,16 @@ export function LocationSelector({
       />
       
       {/* Modal */}
-      <div className="relative w-full max-w-4xl bg-bg-elevated rounded-2xl shadow-2xl border border-white/10 overflow-hidden animate-fade-in">
+      <div className="relative w-full max-w-4xl bg-bg-elevated rounded-none shadow-2xl border-2 border-accent-primary overflow-hidden animate-fade-in">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-white/10">
+        <div className="flex items-center justify-between p-5 border-b-2 border-accent-primary/30">
           <div>
             <h2 className="text-xl font-bold text-text-primary">Select Location</h2>
             <p className="text-sm text-text-tertiary mt-0.5">Choose a rental location to view its data</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-bg-hover transition-colors text-text-secondary hover:text-text-primary"
+            className="p-2 rounded-none hover:bg-bg-hover transition-colors text-text-secondary hover:text-accent-primary border-2 border-transparent hover:border-accent-primary/30"
           >
             <X size={20} />
           </button>
@@ -167,7 +167,7 @@ export function LocationSelector({
             >
               <TileLayer
                 attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
               />
               <MapController center={mapCenter} zoom={mapZoom} />
               {locations.map((location) => (
@@ -191,7 +191,7 @@ export function LocationSelector({
                       <p className="font-semibold text-gray-900">{location.name.replace('Avis Car Rental - ', '')}</p>
                       <p className="text-gray-600 text-xs mt-1">{location.address}</p>
                       <button 
-                        className="mt-2 w-full py-1.5 bg-emerald-500 text-white text-xs font-medium rounded hover:bg-emerald-600 transition-colors"
+                        className="mt-2 w-full py-1.5 bg-purple-600 text-white text-xs font-medium rounded-none hover:bg-purple-700 transition-colors"
                         onClick={() => handleSelect(location.location_id)}
                       >
                         Select Location
@@ -203,16 +203,16 @@ export function LocationSelector({
             </MapContainer>
             
             {/* Map hint overlay */}
-            <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-md flex items-center gap-1.5">
+            <div className="absolute bottom-3 left-3 bg-accent-primary/80 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-none flex items-center gap-1.5">
               <Navigation size={12} />
               Click a marker to select
             </div>
           </div>
 
           {/* List Section */}
-          <div className="lg:w-1/2 flex flex-col border-t lg:border-t-0 lg:border-l border-white/10">
+          <div className="lg:w-1/2 flex flex-col border-t-2 lg:border-t-0 lg:border-l-2 border-accent-primary/30">
             {/* Search */}
-            <div className="p-4 border-b border-white/10">
+            <div className="p-4 border-b-2 border-accent-primary/20">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" size={18} />
                 <input
@@ -220,7 +220,7 @@ export function LocationSelector({
                   placeholder="Search by name, code, or address..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-bg-surface border border-white/10 rounded-lg text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-accent-primary/50 focus:ring-1 focus:ring-accent-primary/50 transition-colors"
+                  className="w-full pl-10 pr-4 py-2.5 bg-bg-surface border-2 border-accent-primary/20 rounded-none text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-accent-primary focus:ring-1 focus:ring-accent-primary/50 transition-colors"
                   autoFocus
                 />
               </div>
@@ -245,15 +245,15 @@ export function LocationSelector({
                       onMouseEnter={() => handleHover(location.location_id)}
                       onMouseLeave={() => setHoveredLocationId(null)}
                       className={clsx(
-                        'w-full px-4 py-3.5 flex items-start gap-3 transition-all text-left border-b border-white/5 last:border-b-0',
-                        isSelected && 'bg-accent-primary/10 border-l-2 border-l-accent-primary',
+                        'w-full px-4 py-3.5 flex items-start gap-3 transition-all text-left border-b-2 border-accent-primary/10 last:border-b-0',
+                        isSelected && 'bg-accent-primary/10 border-l-4 border-l-accent-primary',
                         !isSelected && isHovered && 'bg-bg-hover',
                         !isSelected && !isHovered && 'hover:bg-bg-hover'
                       )}
                     >
                       {/* Location Icon */}
                       <div className={clsx(
-                        'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors',
+                        'w-10 h-10 rounded-none flex items-center justify-center flex-shrink-0 transition-colors',
                         isSelected ? 'bg-accent-primary/20' : 'bg-bg-surface'
                       )}>
                         <MapPin
@@ -273,7 +273,7 @@ export function LocationSelector({
                           >
                             {location.name.replace('Avis Car Rental - ', '')}
                           </span>
-                          <span className="text-[10px] text-text-tertiary bg-bg-surface px-1.5 py-0.5 rounded font-mono">
+                          <span className="text-[10px] text-text-tertiary bg-bg-surface px-1.5 py-0.5 rounded-none font-mono border border-accent-primary/20">
                             {location.location_id}
                           </span>
                         </div>
@@ -284,7 +284,7 @@ export function LocationSelector({
                       
                       {/* Selected Check */}
                       {isSelected && (
-                        <div className="w-6 h-6 rounded-full bg-accent-primary flex items-center justify-center flex-shrink-0">
+                        <div className="w-6 h-6 rounded-none bg-accent-primary flex items-center justify-center flex-shrink-0">
                           <Check size={14} className="text-white" />
                         </div>
                       )}
