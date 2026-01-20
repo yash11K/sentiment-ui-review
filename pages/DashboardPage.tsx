@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Star, 
   MessageSquare, 
@@ -7,7 +8,7 @@ import {
   AlertTriangle, 
   ArrowRight,
   ChevronDown,
-  Clock,
+  Tag,
   PieChart as PieChartIcon
 } from 'lucide-react';
 import { 
@@ -20,7 +21,7 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
-import { useDashboardData } from '../hooks/useDashboardData';
+import { useDashboardData, TrendsPeriod } from '../hooks/useDashboardData';
 import { useStore } from '../store';
 import type { TrendsResponse, TopicsResponse, SentimentResponse } from '../types/api';
 
@@ -33,6 +34,13 @@ const SENTIMENT_COLORS = {
   neutral: '#FBBF24',
   negative: '#F87171',
 };
+
+// Period options for the dropdown
+const PERIOD_OPTIONS: { value: TrendsPeriod; label: string }[] = [
+  { value: 'day', label: 'Daily' },
+  { value: 'week', label: 'Weekly' },
+  { value: 'month', label: 'Monthly' },
+];
 
 /**
  * Transform API sentiment trends to chart-compatible format
@@ -66,6 +74,39 @@ function transformTopicData(topics: TopicsResponse | null): Array<{ name: string
     name: topic.topic,
     value: totalCount > 0 ? Math.round((topic.count / totalCount) * 100) : 0,
     color: TOPIC_COLORS[index % TOPIC_COLORS.length],
+  }));
+}
+
+/**
+ * Transform API topics to bar chart format for Topic Distribution
+ * Shows raw count per topic
+ */
+function transformTopicDistributionData(topics: TopicsResponse | null): Array<{ name: string; count: number; color: string }> {
+  if (!topics?.topics || topics.topics.length === 0) {
+    return [];
+  }
+  
+  return topics.topics.map((topic, index) => ({
+    name: topic.topic,
+    count: topic.count,
+    color: TOPIC_COLORS[index % TOPIC_COLORS.length],
+  }));
+}
+
+/**
+ * Transform API topics to stacked bar chart format for Topic Sentiment Breakdown
+ * Shows positive/negative/neutral counts per topic
+ */
+function transformTopicSentimentData(topics: TopicsResponse | null): Array<{ name: string; positive: number; neutral: number; negative: number }> {
+  if (!topics?.topics || topics.topics.length === 0) {
+    return [];
+  }
+  
+  return topics.topics.map((topic) => ({
+    name: topic.topic,
+    positive: topic.sentiment_split.positive,
+    neutral: topic.sentiment_split.neutral,
+    negative: topic.sentiment_split.negative,
   }));
 }
 
@@ -122,26 +163,27 @@ function getPositivePercentage(sentiment: SentimentResponse | null): number {
   return Math.round((positive_count / total) * 100);
 }
 
-// Mock wait time data - kept as mock since API doesn't provide this data
-const waitTimeData = [
-  { hour: '6AM', wait: 12, satisfaction: 85 },
-  { hour: '9AM', wait: 25, satisfaction: 60 },
-  { hour: '12PM', wait: 18, satisfaction: 75 },
-  { hour: '3PM', wait: 22, satisfaction: 70 },
-  { hour: '6PM', wait: 45, satisfaction: 40 },
-  { hour: '9PM', wait: 15, satisfaction: 80 },
-];
-
 const DashboardPage = () => {
+  const navigate = useNavigate();
+  
   // Get current location from store
   const currentLocation = useStore((state) => state.currentLocation);
   
+  // Period state for trend data grouping
+  const [period, setPeriod] = useState<TrendsPeriod>('week');
+  const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
+  
   // Fetch dashboard data using the hook
-  const { summary, trends, topics, sentiment, isLoading, error, refetch } = useDashboardData(currentLocation);
+  const { summary, trends, topics, sentiment, isLoading, error, refetch } = useDashboardData(currentLocation, period);
+  
+  // Get current period label
+  const currentPeriodLabel = PERIOD_OPTIONS.find(opt => opt.value === period)?.label || 'Weekly';
   
   // Transform API data to chart-compatible formats using useMemo for performance
   const trendData = useMemo(() => transformTrendData(trends), [trends]);
   const topicData = useMemo(() => transformTopicData(topics), [topics]);
+  const topicDistributionData = useMemo(() => transformTopicDistributionData(topics), [topics]);
+  const topicSentimentData = useMemo(() => transformTopicSentimentData(topics), [topics]);
   const sentimentData = useMemo(() => transformSentimentData(sentiment), [sentiment]);
   const positivePercentage = useMemo(() => getPositivePercentage(sentiment), [sentiment]);
 
@@ -241,11 +283,15 @@ const DashboardPage = () => {
               <Badge variant="warning">HIGH PRIORITY</Badge>
             </div>
             <p className="text-text-secondary text-sm">
-              Wait times on Fridays between 4PM-7PM are driving a <span className="text-text-primary font-semibold">15% drop</span> in sentiment.
+              Wait times are a frequent concern at this location — consider reviewing car availability and staffing levels.
             </p>
           </div>
         </div>
-        <Button variant="ghost" className="text-status-warning hover:text-status-warning hover:bg-status-warning/10 z-10 whitespace-nowrap">
+        <Button 
+          variant="ghost" 
+          className="text-status-warning hover:text-status-warning hover:bg-status-warning/10 z-10 whitespace-nowrap"
+          onClick={() => navigate('/ai-analysis?q=' + encodeURIComponent('What are the reviews about wait times and why is waiting time high?'))}
+        >
           View Analysis <ArrowRight size={16} className="ml-1" />
         </Button>
       </div>
@@ -257,9 +303,35 @@ const DashboardPage = () => {
           <p className="text-text-tertiary">Real-time performance metrics for {currentLocation}</p>
         </div>
         <div className="flex gap-2">
-           <Button variant="secondary" size="sm" leftIcon={<ChevronDown size={14} />}>
-            Last 30 Days
-          </Button>
+          <div className="relative">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              leftIcon={<ChevronDown size={14} className={clsx("transition-transform", showPeriodDropdown && "rotate-180")} />}
+              onClick={() => setShowPeriodDropdown(!showPeriodDropdown)}
+            >
+              {currentPeriodLabel}
+            </Button>
+            {showPeriodDropdown && (
+              <div className="absolute right-0 mt-2 w-32 bg-bg-elevated border border-white/10 rounded-lg shadow-lg z-10">
+                {PERIOD_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    className={clsx(
+                      "w-full px-4 py-2 text-left text-sm hover:bg-bg-surface transition-colors first:rounded-t-lg last:rounded-b-lg",
+                      period === option.value ? "text-accent-primary bg-bg-surface" : "text-text-secondary"
+                    )}
+                    onClick={() => {
+                      setPeriod(option.value);
+                      setShowPeriodDropdown(false);
+                    }}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
            <Button variant="primary" size="sm">
             Export Report
           </Button>
@@ -286,35 +358,42 @@ const DashboardPage = () => {
         ))}
       </div>
 
-      {/* New Row: Wait Time & Sentiment Breakdown */}
+      {/* New Row: Topic Distribution & Sentiment Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Wait Time Analysis */}
+        {/* Topic Distribution */}
         <Card className="lg:col-span-2 min-h-[350px] flex flex-col">
           <div className="flex justify-between items-center mb-6">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <Clock size={16} className="text-accent-primary" />
-                <h3 className="font-bold text-lg text-text-primary">Wait Time Impact</h3>
+                <Tag size={16} className="text-accent-primary" />
+                <h3 className="font-bold text-lg text-text-primary">Topic Distribution</h3>
               </div>
-              <p className="text-text-tertiary text-sm">Wait duration (mins) vs Customer Satisfaction Score</p>
+              <p className="text-text-tertiary text-sm">Review count by topic category</p>
             </div>
           </div>
           <div className="flex-1 w-full min-h-[250px]">
-             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={waitTimeData} margin={{top: 20, right: 30, left: 20, bottom: 5}}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2D3640" vertical={false} />
-                <XAxis dataKey="hour" axisLine={false} tickLine={false} tick={{fill: '#6B7785'}} />
-                <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{fill: '#6B7785'}} />
-                <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{fill: '#6B7785'}} />
-                <Tooltip 
-                  cursor={{fill: '#242B35'}}
-                  contentStyle={{backgroundColor: '#1A1F26', borderColor: 'rgba(255,255,255,0.1)', color: '#fff'}} 
-                />
-                <Legend iconType="circle" />
-                <Bar yAxisId="left" dataKey="wait" name="Wait (mins)" fill="#60A5FA" radius={[4,4,0,0]} barSize={30} />
-                <Bar yAxisId="right" dataKey="satisfaction" name="Sat Score" fill="#22B8A0" radius={[4,4,0,0]} barSize={30} />
-              </BarChart>
-            </ResponsiveContainer>
+            {topicDistributionData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={topicDistributionData} margin={{top: 20, right: 30, left: 20, bottom: 5}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#2D3640" vertical={false} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6B7785', fontSize: 11}} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#6B7785'}} />
+                  <Tooltip 
+                    cursor={{fill: '#242B35'}}
+                    contentStyle={{backgroundColor: '#1A1F26', borderColor: 'rgba(255,255,255,0.1)', color: '#fff'}} 
+                  />
+                  <Bar dataKey="count" name="Reviews" radius={[4,4,0,0]} barSize={40}>
+                    {topicDistributionData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-text-tertiary">
+                No topic data available
+              </div>
+            )}
           </div>
         </Card>
 

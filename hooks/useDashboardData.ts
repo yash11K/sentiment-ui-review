@@ -30,8 +30,11 @@ import type {
   SentimentResponse,
 } from '../types/api';
 
+// Period type for trends data
+export type TrendsPeriod = 'day' | 'week' | 'month';
+
 // Default period for trends data
-const DEFAULT_TRENDS_PERIOD: 'day' | 'week' | 'month' = 'week';
+const DEFAULT_TRENDS_PERIOD: TrendsPeriod = 'week';
 
 interface UseDashboardDataResult {
   summary: DashboardSummary | null;
@@ -50,12 +53,13 @@ interface UseDashboardDataResult {
  * - Updates the store with fetched data
  * - Handles loading and error states
  * - Provides a refetch function for retry functionality
- * - Automatically refetches when locationId changes
+ * - Automatically refetches when locationId or period changes
  * 
  * @param locationId - The location identifier (e.g., "JFK")
+ * @param period - The time period for trend grouping ('day', 'week', or 'month')
  * @returns Object containing dashboard data, loading state, error state, and refetch function
  */
-export function useDashboardData(locationId: string): UseDashboardDataResult {
+export function useDashboardData(locationId: string, period: TrendsPeriod = DEFAULT_TRENDS_PERIOD): UseDashboardDataResult {
   // Track if component is mounted to prevent state updates after unmount
   const isMountedRef = useRef(true);
   
@@ -93,7 +97,7 @@ export function useDashboardData(locationId: string): UseDashboardDataResult {
       // Requirements 3.1, 3.2, 3.3, 3.4
       const [summaryData, trendsData, topicsData, sentimentData] = await Promise.all([
         fetchDashboardSummary(locationId),
-        fetchDashboardTrends(locationId, DEFAULT_TRENDS_PERIOD),
+        fetchDashboardTrends(locationId, period),
         fetchDashboardTopics(locationId),
         fetchDashboardSentiment(locationId),
       ]);
@@ -117,7 +121,7 @@ export function useDashboardData(locationId: string): UseDashboardDataResult {
         setDashboardLoading(false);
       }
     }
-  }, [locationId, setDashboardData, setDashboardLoading, setDashboardError]);
+  }, [locationId, period, setDashboardData, setDashboardLoading, setDashboardError]);
 
   /**
    * Refetch function for retry functionality.

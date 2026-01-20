@@ -7,7 +7,7 @@ import { Citations } from '../components/ui/Citations';
 import { useStore } from '../store';
 import { useChat } from '../hooks/useChat';
 import { clsx } from 'clsx';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const AIAnalysisPage = () => {
   const { 
@@ -23,6 +23,20 @@ const AIAnalysisPage = () => {
   const [inputValue, setInputValue] = React.useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const hasProcessedQuery = useRef(false);
+
+  // Handle pre-filled query from URL parameter (e.g., from Dashboard alert)
+  useEffect(() => {
+    const query = searchParams.get('q');
+    if (query && !hasProcessedQuery.current && !isChatLoading) {
+      hasProcessedQuery.current = true;
+      // Clear the query param from URL
+      setSearchParams({});
+      // Send the message
+      sendMessage(query);
+    }
+  }, [searchParams, setSearchParams, sendMessage, isChatLoading]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
