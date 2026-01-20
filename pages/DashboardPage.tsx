@@ -21,6 +21,7 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
+import { Skeleton, SkeletonKPICard, SkeletonChartCard } from '../components/ui/Skeleton';
 import { useDashboardData, TrendsPeriod } from '../hooks/useDashboardData';
 import { useStore } from '../store';
 import type { TrendsResponse, TopicsResponse, SentimentResponse } from '../types/api';
@@ -249,8 +250,60 @@ const DashboardPage = () => {
   // Show loading state while data is being fetched (Requirement 3.5)
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <LoadingState message="Loading dashboard data..." size="lg" />
+      <div className="space-y-6 animate-fade-in pb-10">
+        {/* Skeleton Alert Banner */}
+        <div className="rounded-xl bg-bg-elevated p-4 flex items-center gap-4">
+          <Skeleton variant="rounded" width={48} height={48} />
+          <div className="flex-1 space-y-2">
+            <Skeleton variant="text" width={200} height={20} />
+            <Skeleton variant="text" width="80%" height={14} />
+          </div>
+        </div>
+
+        {/* Skeleton Header */}
+        <div className="flex justify-between items-center">
+          <div className="space-y-2">
+            <Skeleton variant="text" width={200} height={28} />
+            <Skeleton variant="text" width={280} height={16} />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton variant="rounded" width={90} height={36} />
+            <Skeleton variant="rounded" width={110} height={36} />
+          </div>
+        </div>
+
+        {/* Skeleton KPI Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <SkeletonKPICard key={i} />
+          ))}
+        </div>
+
+        {/* Skeleton Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <SkeletonChartCard className="lg:col-span-2" height={250} />
+          <SkeletonChartCard height={250} />
+        </div>
+
+        {/* Skeleton Second Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <SkeletonChartCard className="lg:col-span-2" height={300} />
+          <div className="p-6 rounded-2xl bg-bg-elevated border border-white/5 space-y-6">
+            <div className="space-y-2">
+              <Skeleton variant="text" width={120} height={20} />
+              <Skeleton variant="text" width={150} height={14} />
+            </div>
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="space-y-2">
+                <div className="flex justify-between">
+                  <Skeleton variant="text" width={80} height={14} />
+                  <Skeleton variant="text" width={40} height={14} />
+                </div>
+                <Skeleton variant="rounded" width="100%" height={8} />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

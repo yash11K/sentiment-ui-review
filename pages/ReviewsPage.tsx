@@ -3,6 +3,7 @@ import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
+import { Skeleton, SkeletonReviewCard } from '../components/ui/Skeleton';
 import { Star, Search, Filter, FileText, ChevronDown, X } from 'lucide-react';
 import { useReviews } from '../hooks/useReviews';
 import { useStore } from '../store';
@@ -101,7 +102,23 @@ const ReviewsPage = () => {
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold font-display text-text-primary">Reviews Explorer</h2>
         </div>
-        <LoadingState message="Loading reviews..." size="lg" />
+        
+        {/* Skeleton Filter Bar */}
+        <Card padding="sm" className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+          <Skeleton variant="rounded" width={384} height={40} className="w-full sm:w-96" />
+          <div className="flex gap-2">
+            <Skeleton variant="rounded" width={110} height={40} />
+            <Skeleton variant="rounded" width={130} height={40} />
+            <Skeleton variant="rounded" width={100} height={40} />
+          </div>
+        </Card>
+        
+        {/* Skeleton Review Cards */}
+        <div className="space-y-4">
+          {[...Array(5)].map((_, i) => (
+            <SkeletonReviewCard key={i} />
+          ))}
+        </div>
       </div>
     );
   }
