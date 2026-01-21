@@ -106,6 +106,7 @@ import type {
   ReviewsParams,
   ChatResponse,
   ChatRequest,
+  HighlightResponse,
 } from '../types/api';
 
 // ============================================================================
@@ -168,6 +169,16 @@ export async function fetchDashboardTopics(locationId: string): Promise<TopicsRe
  */
 export async function fetchDashboardSentiment(locationId: string): Promise<SentimentResponse> {
   return apiFetch<SentimentResponse>(`/api/dashboard/sentiment-details?location_id=${encodeURIComponent(locationId)}`);
+}
+
+/**
+ * Fetch dashboard highlight/alert for a specific location.
+ * 
+ * @param locationId - The location identifier (e.g., "JFK")
+ * @returns Promise resolving to HighlightResponse data
+ */
+export async function fetchDashboardHighlight(locationId: string): Promise<HighlightResponse> {
+  return apiFetch<HighlightResponse>(`/api/dashboard/highlight?location_id=${encodeURIComponent(locationId)}`);
 }
 
 /**

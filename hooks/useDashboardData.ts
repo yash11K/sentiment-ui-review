@@ -21,6 +21,7 @@ import {
   fetchDashboardTrends,
   fetchDashboardTopics,
   fetchDashboardSentiment,
+  fetchDashboardHighlight,
 } from '../services/apiService';
 import { useStore } from '../store';
 import type {
@@ -28,6 +29,7 @@ import type {
   TrendsResponse,
   TopicsResponse,
   SentimentResponse,
+  HighlightResponse,
 } from '../types/api';
 
 // Period type for trends data
@@ -41,6 +43,7 @@ interface UseDashboardDataResult {
   trends: TrendsResponse | null;
   topics: TopicsResponse | null;
   sentiment: SentimentResponse | null;
+  highlight: HighlightResponse | null;
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
@@ -68,6 +71,7 @@ export function useDashboardData(locationId: string, period: TrendsPeriod = DEFA
   const trends = useStore((state) => state.dashboardTrends);
   const topics = useStore((state) => state.dashboardTopics);
   const sentiment = useStore((state) => state.dashboardSentiment);
+  const highlight = useStore((state) => state.dashboardHighlight);
   const isLoading = useStore((state) => state.dashboardLoading);
   const error = useStore((state) => state.dashboardError);
   
@@ -95,11 +99,12 @@ export function useDashboardData(locationId: string, period: TrendsPeriod = DEFA
     try {
       // Fetch all dashboard data in parallel using Promise.all
       // Requirements 3.1, 3.2, 3.3, 3.4
-      const [summaryData, trendsData, topicsData, sentimentData] = await Promise.all([
+      const [summaryData, trendsData, topicsData, sentimentData, highlightData] = await Promise.all([
         fetchDashboardSummary(locationId),
         fetchDashboardTrends(locationId, period),
         fetchDashboardTopics(locationId),
         fetchDashboardSentiment(locationId),
+        fetchDashboardHighlight(locationId),
       ]);
 
       // Only update state if component is still mounted
@@ -109,6 +114,7 @@ export function useDashboardData(locationId: string, period: TrendsPeriod = DEFA
           trends: trendsData,
           topics: topicsData,
           sentiment: sentimentData,
+          highlight: highlightData,
           loading: false,
           error: null,
         });
@@ -149,6 +155,7 @@ export function useDashboardData(locationId: string, period: TrendsPeriod = DEFA
     trends,
     topics,
     sentiment,
+    highlight,
     isLoading,
     error,
     refetch,

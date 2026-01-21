@@ -233,3 +233,20 @@ export interface InsightsResponse {
   generated_at: string;
   regenerated: boolean;
 }
+
+/**
+ * Dashboard Highlight Response
+ * Returned by GET /api/dashboard/highlight
+ */
+export interface HighlightResponse {
+  highlight: {
+    headline: string;
+    description: string;
+    severity: 'high' | 'medium' | 'low';
+    topic: string;
+    topic_label: string;
+    complaint_count: number;
+    analysis_query: string;
+  };
+  generated_at: string;
+}

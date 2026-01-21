@@ -24,7 +24,7 @@ import { ErrorState } from '../components/ui/ErrorState';
 import { Skeleton, SkeletonKPICard, SkeletonChartCard } from '../components/ui/Skeleton';
 import { useDashboardData, TrendsPeriod } from '../hooks/useDashboardData';
 import { useStore } from '../store';
-import type { TrendsResponse, TopicsResponse, SentimentResponse } from '../types/api';
+import type { TrendsResponse, TopicsResponse, SentimentResponse, HighlightResponse } from '../types/api';
 
 // Color palette for topics - Purple theme
 const TOPIC_COLORS = ['#7C3AED', '#8B5CF6', '#A78BFA', '#C4B5FD', '#6D28D9', '#5B21B6'];
@@ -175,7 +175,7 @@ const DashboardPage = () => {
   const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
   
   // Fetch dashboard data using the hook
-  const { summary, trends, topics, sentiment, isLoading, error, refetch } = useDashboardData(currentLocation, period);
+  const { summary, trends, topics, sentiment, highlight, isLoading, error, refetch } = useDashboardData(currentLocation, period);
   
   // Get current period label
   const currentPeriodLabel = PERIOD_OPTIONS.find(opt => opt.value === period)?.label || 'Weekly';
@@ -323,31 +323,55 @@ const DashboardPage = () => {
   return (
     <div className="space-y-6 animate-fade-in pb-10">
       
-      {/* Smart Alert Banner */}
-      <div className="rounded-none border-l-4 border-status-warning bg-bg-elevated p-4 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative overflow-hidden border-2 border-status-warning/30">
-        <div className="absolute top-0 right-0 w-64 h-full bg-gradient-to-l from-status-warning/10 to-transparent pointer-events-none" />
-        <div className="flex items-start gap-4 z-10">
-          <div className="p-2 bg-status-warning/20 rounded-none text-status-warning shrink-0">
-            <AlertTriangle size={24} />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-bold text-text-primary">Peak Congestion Forecast</h3>
-              <Badge variant="warning">HIGH PRIORITY</Badge>
+      {/* Smart Alert Banner - Dynamic from API */}
+      {highlight?.highlight && (
+        <div className={clsx(
+          "rounded-none border-l-4 bg-bg-elevated p-4 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative overflow-hidden border-2",
+          highlight.highlight.severity === 'high' ? 'border-status-warning border-status-warning/30' : 
+          highlight.highlight.severity === 'medium' ? 'border-yellow-500 border-yellow-500/30' : 
+          'border-blue-500 border-blue-500/30'
+        )}>
+          <div className={clsx(
+            "absolute top-0 right-0 w-64 h-full bg-gradient-to-l to-transparent pointer-events-none",
+            highlight.highlight.severity === 'high' ? 'from-status-warning/10' : 
+            highlight.highlight.severity === 'medium' ? 'from-yellow-500/10' : 
+            'from-blue-500/10'
+          )} />
+          <div className="flex items-start gap-4 z-10">
+            <div className={clsx(
+              "p-2 rounded-none shrink-0",
+              highlight.highlight.severity === 'high' ? 'bg-status-warning/20 text-status-warning' : 
+              highlight.highlight.severity === 'medium' ? 'bg-yellow-500/20 text-yellow-500' : 
+              'bg-blue-500/20 text-blue-500'
+            )}>
+              <AlertTriangle size={24} />
             </div>
-            <p className="text-text-secondary text-sm">
-              Wait times are a frequent concern at this location — consider reviewing car availability and staffing levels.
-            </p>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-bold text-text-primary">{highlight.highlight.headline}</h3>
+                <Badge variant={highlight.highlight.severity === 'high' ? 'warning' : highlight.highlight.severity === 'medium' ? 'default' : 'success'}>
+                  {highlight.highlight.severity.toUpperCase()} PRIORITY
+                </Badge>
+              </div>
+              <p className="text-text-secondary text-sm">
+                {highlight.highlight.description}
+              </p>
+            </div>
           </div>
+          <Button 
+            variant="ghost" 
+            className={clsx(
+              "z-10 whitespace-nowrap",
+              highlight.highlight.severity === 'high' ? 'text-status-warning hover:text-status-warning hover:bg-status-warning/10' : 
+              highlight.highlight.severity === 'medium' ? 'text-yellow-500 hover:text-yellow-500 hover:bg-yellow-500/10' : 
+              'text-blue-500 hover:text-blue-500 hover:bg-blue-500/10'
+            )}
+            onClick={() => navigate('/ai-analysis?q=' + encodeURIComponent(highlight.highlight.analysis_query))}
+          >
+            View Analysis <ArrowRight size={16} className="ml-1" />
+          </Button>
         </div>
-        <Button 
-          variant="ghost" 
-          className="text-status-warning hover:text-status-warning hover:bg-status-warning/10 z-10 whitespace-nowrap"
-          onClick={() => navigate('/ai-analysis?q=' + encodeURIComponent('What are the reviews about wait times and why is waiting time high?'))}
-        >
-          View Analysis <ArrowRight size={16} className="ml-1" />
-        </Button>
-      </div>
+      )}
 
       {/* Header Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4">
