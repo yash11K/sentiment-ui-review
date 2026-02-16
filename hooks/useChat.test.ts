@@ -46,8 +46,9 @@ describe('useChat', () => {
     // Arrange
     const userQuery = 'What are the main complaints?';
     const mockResponse = {
-      response: 'The main complaints are about wait times and staff behavior.',
-      sources: [],
+      answer: 'The main complaints are about wait times and staff behavior.',
+      citations: [],
+      source: 'test',
     };
     mockSendChatMessage.mockResolvedValueOnce(mockResponse);
 
@@ -68,14 +69,14 @@ describe('useChat', () => {
     expect(storeState.messages[0].role).toBe('user');
     expect(storeState.messages[0].content).toBe(userQuery);
     expect(storeState.messages[1].role).toBe('assistant');
-    expect(storeState.messages[1].content).toBe(mockResponse.response);
+    expect(storeState.messages[1].content).toBe(mockResponse.answer);
   });
 
   it('should set loading state while waiting for response (Requirement 5.3)', async () => {
     // Arrange
     const userQuery = 'Test query';
-    let resolvePromise: (value: { response: string }) => void;
-    const pendingPromise = new Promise<{ response: string }>((resolve) => {
+    let resolvePromise: (value: { answer: string; citations: never[]; source: string }) => void;
+    const pendingPromise = new Promise<{ answer: string; citations: never[]; source: string }>((resolve) => {
       resolvePromise = resolve;
     });
     mockSendChatMessage.mockReturnValueOnce(pendingPromise);
@@ -96,7 +97,7 @@ describe('useChat', () => {
 
     // Resolve the promise
     await act(async () => {
-      resolvePromise!({ response: 'Response' });
+      resolvePromise!({ answer: 'Response', citations: [], source: 'test' });
       await sendPromise;
     });
 
@@ -173,7 +174,7 @@ describe('useChat', () => {
     useStore.setState({ currentLocation: newLocation });
     
     const userQuery = 'Test query';
-    mockSendChatMessage.mockResolvedValueOnce({ response: 'Response' });
+    mockSendChatMessage.mockResolvedValueOnce({ answer: 'Response', citations: [], source: 'test' });
 
     // Act
     const { result } = renderHook(() => useChat());
@@ -191,7 +192,7 @@ describe('useChat', () => {
     const mockError = new Error('First error');
     mockSendChatMessage
       .mockRejectedValueOnce(mockError)
-      .mockResolvedValueOnce({ response: 'Success' });
+      .mockResolvedValueOnce({ answer: 'Success', citations: [], source: 'test' });
 
     // Act
     const { result } = renderHook(() => useChat());
@@ -214,7 +215,7 @@ describe('useChat', () => {
 
   it('should return correct interface shape', async () => {
     // Arrange
-    mockSendChatMessage.mockResolvedValueOnce({ response: 'Test' });
+    mockSendChatMessage.mockResolvedValueOnce({ answer: 'Test', citations: [], source: 'test' });
 
     // Act
     const { result } = renderHook(() => useChat());
@@ -236,7 +237,7 @@ describe('useChat', () => {
     mockSendChatMessage.mockImplementationOnce(async () => {
       apiCallOrder = useStore.getState().messages.length;
       userMessageAddedBeforeApi = apiCallOrder >= 1;
-      return { response: 'Response' };
+      return { answer: 'Response', citations: [], source: 'test' };
     });
 
     // Act

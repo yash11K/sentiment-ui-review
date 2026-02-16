@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { X, Search, MapPin, Check, Navigation } from 'lucide-react';
+import { X, Search, MapPin, Check, Navigation, ArrowLeft } from 'lucide-react';
 import { clsx } from 'clsx';
 import type { Location } from '../../types/api';
+import { isOwnBrand } from '../../types/api';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default marker icons in Leaflet with bundlers
@@ -39,6 +40,7 @@ interface LocationSelectorProps {
   locations: Location[];
   currentLocationId: string;
   onSelectLocation: (locationId: string) => void;
+  onSelectBrand?: (brand: string | null) => void;
 }
 
 // Component to handle map view changes
@@ -58,10 +60,31 @@ export function LocationSelector({
   locations,
   currentLocationId,
   onSelectLocation,
+  onSelectBrand,
 }: LocationSelectorProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [hoveredLocationId, setHoveredLocationId] = useState<string | null>(null);
   const [focusedLocationId, setFocusedLocationId] = useState<string | null>(null);
+  const [step, setStep] = useState<'location' | 'brand'>('location');
+  const [pendingLocationId, setPendingLocationId] = useState<string | null>(null);
+
+  // Derive brand groups directly from the locations data — no extra API calls
+  const { ownBrands, competitorBrands } = useMemo(() => {
+    if (!pendingLocationId) return { ownBrands: [], competitorBrands: [] };
+    const loc = locations.find((l) => l.location_id === pendingLocationId);
+    const brands = loc?.brands ?? [];
+    return {
+      ownBrands: brands.filter((b) => !b.is_competitor),
+      competitorBrands: brands.filter((b) => b.is_competitor),
+    };
+  }, [locations, pendingLocationId]);
+
+  // Get the pending location name for the step 2 header
+  const pendingLocationName = useMemo(() => {
+    if (!pendingLocationId) return '';
+    const loc = locations.find((l) => l.location_id === pendingLocationId);
+    return loc?.name?.replace('Avis Car Rental - ', '') ?? pendingLocationId;
+  }, [locations, pendingLocationId]);
 
   // Filter locations based on search
   const filteredLocations = useMemo(() => {
@@ -95,7 +118,23 @@ export function LocationSelector({
   const mapZoom = focusedLocationId ? 10 : (locations.length === 1 ? 10 : 4);
 
   const handleSelect = (locationId: string) => {
-    onSelectLocation(locationId);
+    setPendingLocationId(locationId);
+    setStep('brand');
+  };
+
+  const handleBrandSelect = (brand: string) => {
+    if (pendingLocationId) {
+      onSelectLocation(pendingLocationId);
+      onSelectBrand?.(brand);
+    }
+    onClose();
+  };
+
+  const handleSkipBrand = () => {
+    if (pendingLocationId) {
+      onSelectLocation(pendingLocationId);
+      onSelectBrand?.(null);
+    }
     onClose();
   };
 
@@ -127,6 +166,8 @@ export function LocationSelector({
       setSearchQuery('');
       setFocusedLocationId(null);
       setHoveredLocationId(null);
+      setStep('location');
+      setPendingLocationId(null);
     }
   }, [isOpen]);
 
@@ -144,9 +185,25 @@ export function LocationSelector({
       <div className="relative w-full max-w-4xl bg-bg-elevated rounded-none shadow-2xl border-2 border-accent-primary overflow-hidden animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b-2 border-accent-primary/30">
-          <div>
-            <h2 className="text-xl font-bold text-text-primary">Select Location</h2>
-            <p className="text-sm text-text-tertiary mt-0.5">Choose a rental location to view its data</p>
+          <div className="flex items-center gap-3">
+            {step === 'brand' && (
+              <button
+                onClick={() => setStep('location')}
+                className="p-1.5 rounded-none hover:bg-bg-hover transition-colors text-text-secondary hover:text-accent-primary border-2 border-transparent hover:border-accent-primary/30"
+              >
+                <ArrowLeft size={20} />
+              </button>
+            )}
+            <div>
+              <h2 className="text-xl font-bold text-text-primary">
+                {step === 'location' ? 'Select Location' : `Select Brand at ${pendingLocationName}`}
+              </h2>
+              <p className="text-sm text-text-tertiary mt-0.5">
+                {step === 'location'
+                  ? 'Choose a rental location to view its data'
+                  : 'Choose a brand to filter competitive data'}
+              </p>
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -156,6 +213,7 @@ export function LocationSelector({
           </button>
         </div>
 
+        {step === 'location' ? (
         <div className="flex flex-col lg:flex-row">
           {/* Map Section */}
           <div className="lg:w-1/2 h-72 lg:h-96 relative">
@@ -295,6 +353,64 @@ export function LocationSelector({
             </div>
           </div>
         </div>
+        ) : (
+        /* Step 2: Brand Selection */
+        <div className="p-5">
+          {/* Skip / All Brands button */}
+          <button
+            onClick={handleSkipBrand}
+            className="w-full mb-4 py-2.5 px-4 bg-bg-surface border-2 border-accent-primary/20 rounded-none text-text-primary font-medium hover:bg-bg-hover hover:border-accent-primary/40 transition-colors"
+          >
+            Skip / All Brands
+          </button>
+
+          {ownBrands.length === 0 && competitorBrands.length === 0 ? (
+            <div className="py-12 text-center text-text-tertiary">
+              <p>No brands available at this location</p>
+            </div>
+          ) : (
+            <div className="overflow-y-auto max-h-72 lg:max-h-80 space-y-4">
+              {/* Our Brands */}
+              {ownBrands.length > 0 && (
+                <div>
+                  <h3 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2">Our Brands</h3>
+                  <div className="space-y-1">
+                    {ownBrands.map((b) => (
+                      <button
+                        key={b.brand}
+                        onClick={() => handleBrandSelect(b.brand)}
+                        className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-bg-hover transition-colors border-2 border-transparent hover:border-accent-primary/20 rounded-none"
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full bg-purple-500 flex-shrink-0" />
+                        <span className="font-medium text-text-primary capitalize">{b.brand}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Competitors */}
+              {competitorBrands.length > 0 && (
+                <div>
+                  <h3 className="text-xs font-semibold text-text-tertiary uppercase tracking-wider mb-2">Competitors</h3>
+                  <div className="space-y-1">
+                    {competitorBrands.map((b) => (
+                      <button
+                        key={b.brand}
+                        onClick={() => handleBrandSelect(b.brand)}
+                        className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-bg-hover transition-colors border-2 border-transparent hover:border-accent-primary/20 rounded-none"
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full bg-red-500 flex-shrink-0" />
+                        <span className="font-medium text-text-primary capitalize">{b.brand}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        )}
       </div>
     </div>
   );

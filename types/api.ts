@@ -103,6 +103,7 @@ export interface ApiReview {
   id: number;
   location_id: string;
   source: string;
+  brand?: string;
   rating: number;
   review_text: string;
   reviewer_name: string;
@@ -111,6 +112,115 @@ export interface ApiReview {
   sentiment_score: number;
   topics: string[];
   entities: string[];
+}
+
+// ============================================================================
+// Brand & Competitive Analysis Types
+// ============================================================================
+
+/** Our portfolio brands */
+export const OWN_BRANDS = ['avis', 'budget', 'payless', 'apex', 'maggiore'] as const;
+export type OwnBrand = typeof OWN_BRANDS[number];
+
+/** Check if a brand belongs to our portfolio */
+export function isOwnBrand(brand: string): boolean {
+  return OWN_BRANDS.includes(brand.toLowerCase() as OwnBrand);
+}
+
+/**
+ * Brand summary metrics for competitive comparison
+ */
+export interface BrandMetrics {
+  brand: string;
+  is_own_brand: boolean;
+  total_reviews: number;
+  average_rating: number;
+  sentiment_breakdown: {
+    positive: number;
+    neutral: number;
+    negative: number;
+  };
+  top_topics: Array<{ topic: string; count: number }>;
+  rating_distribution: Record<string, number>;
+}
+
+/**
+ * Competitive Analysis Response
+ * Returned by GET /api/competitive/analysis
+ */
+export interface CompetitiveAnalysisResponse {
+  location_id: string;
+  brands: BrandMetrics[];
+  market_average_rating: number;
+  market_total_reviews: number;
+  generated_at: string;
+}
+
+/**
+ * Competitive Trends Response
+ * Returned by GET /api/competitive/trends
+ */
+export interface CompetitiveTrendsResponse {
+  location_id: string;
+  brand_trends: Array<{
+    brand: string;
+    is_own_brand: boolean;
+    trends: Array<{
+      period: string;
+      avg_rating: number;
+      review_count: number;
+      positive_pct: number;
+    }>;
+  }>;
+}
+
+/**
+ * Competitive Topic Comparison Response
+ * Returned by GET /api/competitive/topics
+ */
+export interface CompetitiveTopicsResponse {
+  location_id: string;
+  topic_comparison: Array<{
+    topic: string;
+    brands: Array<{
+      brand: string;
+      is_own_brand: boolean;
+      count: number;
+      avg_rating: number;
+      sentiment_pct: { positive: number; neutral: number; negative: number };
+    }>;
+  }>;
+}
+
+/**
+ * Gap Analysis Response
+ * Returned by GET /api/competitive/gap-analysis
+ */
+export interface GapAnalysisResponse {
+  location_id: string;
+  topics: Array<{
+    topic: string;
+    own_avg_rating: number;
+    competitor_avg_rating: number;
+    gap_score: number;
+  }>;
+  generated_at: string;
+}
+
+/**
+ * Market Position Response
+ * Returned by GET /api/competitive/market-position
+ */
+export interface MarketPositionResponse {
+  location_id: string;
+  brands: Array<{
+    brand: string;
+    is_own_brand: boolean;
+    review_share_pct: number;
+    avg_rating: number;
+    rating_rank: number;
+  }>;
+  generated_at: string;
 }
 
 /**
@@ -125,12 +235,18 @@ export interface ReviewsResponse {
  * Location object with coordinates
  * Returned as part of LocationsResponse
  */
+export interface LocationBrand {
+  brand: string;
+  is_competitor: boolean;
+}
+
 export interface Location {
   location_id: string;
   name: string;
   latitude: number;
   longitude: number;
   address: string;
+  brands?: LocationBrand[];
 }
 
 /**
@@ -250,3 +366,102 @@ export interface HighlightResponse {
   };
   generated_at: string;
 }
+
+// ============================================================================
+// Ingestion API Types
+// ============================================================================
+
+/**
+ * Pending file for ingestion
+ * Returned as part of PendingFilesResponse
+ *
+ * S3 key structure: source/brand/AIRPORT_brand_DATE_LAT_LONG.json
+ * e.g. google/avis/ATL_2026-02-12_33.6407_-84.4277.json
+ */
+export interface PendingFile {
+  s3_key: string;
+  location_id: string;
+  source: string;
+  brand?: string;
+  scrape_date: string;
+  size_bytes: number;
+  last_modified: string;
+}
+
+/**
+ * Pending Files Response
+ * Returned by GET /api/ingestion/pending
+ */
+export interface PendingFilesResponse {
+  pending_files: PendingFile[];
+  count: number;
+  bucket: string;
+  prefix: string;
+}
+
+/**
+ * Process Ingestion Request Body
+ * Used for POST /api/ingestion/process
+ */
+export interface ProcessIngestionRequest {
+  s3_keys: string[];
+  enrich?: boolean;
+}
+
+/**
+ * Process Ingestion Response
+ * Returned by POST /api/ingestion/process
+ */
+export interface ProcessIngestionResponse {
+  job_id: string;
+  status: 'queued' | 'running' | 'completed' | 'failed';
+  message: string;
+  files_count: number;
+}
+
+/**
+ * Ingestion History Item
+ * Individual item in ingestion history
+ */
+export interface IngestionHistoryItem {
+  id: number;
+  s3_key: string;
+  location_id: string;
+  source: string;
+  brand?: string;
+  scrape_date: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  reviews_count: number;
+  enriched_count: number;
+  error_message: string | null;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+}
+
+/**
+ * Ingestion History Response
+ * Returned by GET /api/ingestion/history
+ */
+export interface IngestionHistoryResponse {
+  history: IngestionHistoryItem[];
+  count: number;
+}
+
+/**
+ * Job Status Response
+ * Returned by GET /api/ingestion/jobs/{job_id}
+ */
+export interface JobStatusResponse {
+  job_id: string;
+  status: 'queued' | 'running' | 'completed' | 'failed';
+  s3_keys: string[];
+  enrich: boolean;
+  created_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+  results: unknown | null;
+  summary: unknown | null;
+  error: string | null;
+}
+

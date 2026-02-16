@@ -8,7 +8,7 @@
  */
 
 // Configuration
-const BASE_URL = 'http://13.222.154.71:8000';
+const BASE_URL = 'http://localhost:8000';
 const DEFAULT_TIMEOUT = 30000;
 
 /**
@@ -107,6 +107,16 @@ import type {
   ChatResponse,
   ChatRequest,
   HighlightResponse,
+  PendingFilesResponse,
+  ProcessIngestionRequest,
+  ProcessIngestionResponse,
+  IngestionHistoryResponse,
+  JobStatusResponse,
+  CompetitiveAnalysisResponse,
+  CompetitiveTrendsResponse,
+  CompetitiveTopicsResponse,
+  GapAnalysisResponse,
+  MarketPositionResponse,
 } from '../types/api';
 
 // ============================================================================
@@ -325,4 +335,140 @@ export async function sendChatMessage(
     method: 'POST',
     body: JSON.stringify(requestBody),
   });
+}
+
+
+// ============================================================================
+// Ingestion API Functions
+// ============================================================================
+
+/**
+ * Fetch pending files available for ingestion.
+ * 
+ * @returns Promise resolving to PendingFilesResponse data
+ */
+export async function fetchPendingFiles(): Promise<PendingFilesResponse> {
+  return apiFetch<PendingFilesResponse>('/api/ingestion/pending');
+}
+
+/**
+ * Start processing ingestion for selected files.
+ * 
+ * @param s3Keys - Array of S3 keys to process
+ * @param enrich - Optional flag to enable enrichment (defaults to true)
+ * @returns Promise resolving to ProcessIngestionResponse data
+ */
+export async function processIngestion(
+  s3Keys: string[],
+  enrich: boolean = true
+): Promise<ProcessIngestionResponse> {
+  const requestBody: ProcessIngestionRequest = {
+    s3_keys: s3Keys,
+    enrich,
+  };
+
+  return apiFetch<ProcessIngestionResponse>('/api/ingestion/process', {
+    method: 'POST',
+    body: JSON.stringify(requestBody),
+  });
+}
+
+/**
+ * Fetch ingestion history with optional limit.
+ * 
+ * @param limit - Optional maximum number of history items to return
+ * @returns Promise resolving to IngestionHistoryResponse data
+ */
+export async function fetchIngestionHistory(limit?: number): Promise<IngestionHistoryResponse> {
+  let endpoint = '/api/ingestion/history';
+  if (limit !== undefined) {
+    endpoint += `?limit=${limit}`;
+  }
+  return apiFetch<IngestionHistoryResponse>(endpoint);
+}
+
+/**
+ * Fetch status of a specific ingestion job.
+ * 
+ * @param jobId - The job identifier
+ * @returns Promise resolving to JobStatusResponse data
+ */
+export async function fetchJobStatus(jobId: string): Promise<JobStatusResponse> {
+  return apiFetch<JobStatusResponse>(`/api/ingestion/jobs/${encodeURIComponent(jobId)}`);
+}
+
+
+// ============================================================================
+// Competitive Analysis API Functions
+// ============================================================================
+
+/**
+ * Fetch competitive analysis data for a specific location.
+ * Compares own brands vs competitor brands at the same market/airport.
+ *
+ * @param locationId - The location identifier (e.g., "ATL")
+ * @returns Promise resolving to CompetitiveAnalysisResponse data
+ */
+export async function fetchCompetitiveAnalysis(locationId: string): Promise<CompetitiveAnalysisResponse> {
+  return apiFetch<CompetitiveAnalysisResponse>(
+    `/api/competitive/analysis?location_id=${encodeURIComponent(locationId)}`
+  );
+}
+
+/**
+ * Fetch competitive rating/sentiment trends over time.
+ *
+ * @param locationId - The location identifier (e.g., "ATL")
+ * @param period - The time period for trend grouping ('day', 'week', or 'month')
+ * @returns Promise resolving to CompetitiveTrendsResponse data
+ */
+export async function fetchCompetitiveTrends(
+  locationId: string,
+  period: 'day' | 'week' | 'month' = 'week'
+): Promise<CompetitiveTrendsResponse> {
+  return apiFetch<CompetitiveTrendsResponse>(
+    `/api/competitive/trends?location_id=${encodeURIComponent(locationId)}&period=${encodeURIComponent(period)}`
+  );
+}
+
+/**
+ * Fetch topic-level competitive comparison.
+ *
+ * @param locationId - The location identifier (e.g., "ATL")
+ * @returns Promise resolving to CompetitiveTopicsResponse data
+ */
+export async function fetchCompetitiveTopics(locationId: string): Promise<CompetitiveTopicsResponse> {
+  return apiFetch<CompetitiveTopicsResponse>(
+    `/api/competitive/topics?location_id=${encodeURIComponent(locationId)}`
+  );
+}
+
+/**
+ * Fetch gap analysis data comparing own brands vs competitors by topic.
+ *
+ * Requirement 3.1: WHEN the Competitive_Analysis_Page loads, THE API_Service SHALL fetch
+ * gap analysis data from GET /api/competitive/gap-analysis with the current location_id parameter.
+ *
+ * @param locationId - The location identifier (e.g., "ATL")
+ * @returns Promise resolving to GapAnalysisResponse data
+ */
+export async function fetchGapAnalysis(locationId: string): Promise<GapAnalysisResponse> {
+  return apiFetch<GapAnalysisResponse>(
+    `/api/competitive/gap-analysis?location_id=${encodeURIComponent(locationId)}`
+  );
+}
+
+/**
+ * Fetch market position data showing each brand's share and ranking.
+ *
+ * Requirement 4.1: WHEN the Competitive_Analysis_Page loads, THE API_Service SHALL fetch
+ * market position data from GET /api/competitive/market-position with the current location_id parameter.
+ *
+ * @param locationId - The location identifier (e.g., "ATL")
+ * @returns Promise resolving to MarketPositionResponse data
+ */
+export async function fetchMarketPosition(locationId: string): Promise<MarketPositionResponse> {
+  return apiFetch<MarketPositionResponse>(
+    `/api/competitive/market-position?location_id=${encodeURIComponent(locationId)}`
+  );
 }

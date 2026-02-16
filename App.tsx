@@ -4,6 +4,8 @@ import Layout from './components/Layout';
 import DashboardPage from './pages/DashboardPage';
 import AIAnalysisPage from './pages/AIAnalysisPage';
 import ReviewsPage from './pages/ReviewsPage';
+import LocationManagerPage from './pages/LocationManagerPage';
+import CompetitiveAnalysisPage from './pages/CompetitiveAnalysisPage';
 
 const App: React.FC = () => {
   return (
@@ -13,6 +15,8 @@ const App: React.FC = () => {
           <Route index element={<DashboardPage />} />
           <Route path="ai-analysis" element={<AIAnalysisPage />} />
           <Route path="reviews" element={<ReviewsPage />} />
+          <Route path="competitive" element={<CompetitiveAnalysisPage />} />
+          <Route path="locations" element={<LocationManagerPage />} />
           <Route path="staff" element={<div className="p-10 text-center text-text-tertiary">Staff Performance Module (Coming Soon)</div>} />
           <Route path="settings" element={<div className="p-10 text-center text-text-tertiary">Settings Module (Coming Soon)</div>} />
           <Route path="*" element={<Navigate to="/" replace />} />

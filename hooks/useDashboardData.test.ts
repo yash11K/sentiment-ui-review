@@ -23,7 +23,7 @@ import { renderHook, waitFor, act } from '@testing-library/react';
 import { useDashboardData } from './useDashboardData';
 import * as apiService from '../services/apiService';
 import { useStore } from '../store';
-import type { DashboardSummary, TrendsResponse, TopicsResponse, SentimentResponse } from '../types/api';
+import type { DashboardSummary, TrendsResponse, TopicsResponse, SentimentResponse, HighlightResponse } from '../types/api';
 
 // Mock the API service
 vi.mock('../services/apiService', () => ({
@@ -31,6 +31,7 @@ vi.mock('../services/apiService', () => ({
   fetchDashboardTrends: vi.fn(),
   fetchDashboardTopics: vi.fn(),
   fetchDashboardSentiment: vi.fn(),
+  fetchDashboardHighlight: vi.fn(),
 }));
 
 // Mock data
@@ -92,11 +93,25 @@ const mockSentiment: SentimentResponse = {
   },
 };
 
+const mockHighlight: HighlightResponse = {
+  highlight: {
+    headline: 'Wait times increasing',
+    description: 'Wait times have increased by 15% this week.',
+    severity: 'high',
+    topic: 'wait_times',
+    topic_label: 'Wait Times',
+    complaint_count: 12,
+    analysis_query: 'What are the main wait time complaints?',
+  },
+  generated_at: '2024-01-15T10:00:00Z',
+};
+
 describe('useDashboardData', () => {
   const mockFetchSummary = vi.mocked(apiService.fetchDashboardSummary);
   const mockFetchTrends = vi.mocked(apiService.fetchDashboardTrends);
   const mockFetchTopics = vi.mocked(apiService.fetchDashboardTopics);
   const mockFetchSentiment = vi.mocked(apiService.fetchDashboardSentiment);
+  const mockFetchHighlight = vi.mocked(apiService.fetchDashboardHighlight);
 
   beforeEach(() => {
     // Reset store state before each test
@@ -121,6 +136,7 @@ describe('useDashboardData', () => {
     mockFetchTrends.mockResolvedValueOnce(mockTrends);
     mockFetchTopics.mockResolvedValueOnce(mockTopics);
     mockFetchSentiment.mockResolvedValueOnce(mockSentiment);
+    mockFetchHighlight.mockResolvedValueOnce(mockHighlight);
 
     // Act
     const { result } = renderHook(() => useDashboardData('JFK'));
@@ -157,6 +173,7 @@ describe('useDashboardData', () => {
     mockFetchTrends.mockResolvedValueOnce(mockTrends);
     mockFetchTopics.mockResolvedValueOnce(mockTopics);
     mockFetchSentiment.mockResolvedValueOnce(mockSentiment);
+    mockFetchHighlight.mockResolvedValueOnce(mockHighlight);
 
     // Act
     const { result } = renderHook(() => useDashboardData('JFK'));
@@ -182,6 +199,7 @@ describe('useDashboardData', () => {
     mockFetchTrends.mockResolvedValueOnce(mockTrends);
     mockFetchTopics.mockResolvedValueOnce(mockTopics);
     mockFetchSentiment.mockResolvedValueOnce(mockSentiment);
+    mockFetchHighlight.mockResolvedValueOnce(mockHighlight);
 
     // Act
     const { result } = renderHook(() => useDashboardData('JFK'));
@@ -201,6 +219,7 @@ describe('useDashboardData', () => {
     mockFetchTrends.mockResolvedValueOnce(mockTrends);
     mockFetchTopics.mockResolvedValueOnce(mockTopics);
     mockFetchSentiment.mockResolvedValueOnce(mockSentiment);
+    mockFetchHighlight.mockResolvedValueOnce(mockHighlight);
 
     // Act
     const { result } = renderHook(() => useDashboardData('JFK'));
@@ -222,6 +241,7 @@ describe('useDashboardData', () => {
     mockFetchTrends.mockResolvedValueOnce(mockTrends);
     mockFetchTopics.mockResolvedValueOnce(mockTopics);
     mockFetchSentiment.mockResolvedValueOnce(mockSentiment);
+    mockFetchHighlight.mockResolvedValueOnce(mockHighlight);
 
     // Act
     const { result } = renderHook(() => useDashboardData('JFK'));
@@ -236,6 +256,7 @@ describe('useDashboardData', () => {
     mockFetchTrends.mockResolvedValueOnce(mockTrends);
     mockFetchTopics.mockResolvedValueOnce(mockTopics);
     mockFetchSentiment.mockResolvedValueOnce(mockSentiment);
+    mockFetchHighlight.mockResolvedValueOnce(mockHighlight);
 
     // Call refetch
     await act(async () => {
@@ -258,6 +279,7 @@ describe('useDashboardData', () => {
     mockFetchTrends.mockResolvedValue(mockTrends);
     mockFetchTopics.mockResolvedValue(mockTopics);
     mockFetchSentiment.mockResolvedValue(mockSentiment);
+    mockFetchHighlight.mockResolvedValue(mockHighlight);
 
     // Act - initial render with JFK
     const { result, rerender } = renderHook(
@@ -308,6 +330,7 @@ describe('useDashboardData', () => {
     mockFetchTrends.mockResolvedValueOnce(mockTrends);
     mockFetchTopics.mockResolvedValueOnce(mockTopics);
     mockFetchSentiment.mockResolvedValueOnce(mockSentiment);
+    mockFetchHighlight.mockResolvedValueOnce(mockHighlight);
 
     // Act
     const { result } = renderHook(() => useDashboardData('JFK'));
@@ -355,6 +378,8 @@ describe('useDashboardData', () => {
       callOrder.push('sentiment-end');
       return mockSentiment;
     });
+
+    mockFetchHighlight.mockResolvedValueOnce(mockHighlight);
 
     // Act
     const { result } = renderHook(() => useDashboardData('JFK'));

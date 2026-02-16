@@ -81,11 +81,10 @@ describe('useLocations', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    // Verify locations are merged (should have static + new from API)
-    expect(result.current.locations.length).toBeGreaterThan(2);
+    // Verify locations from API are set
+    expect(result.current.locations.length).toBe(2);
     expect(result.current.locations.find(l => l.location_id === 'JFK')).toBeDefined();
     expect(result.current.locations.find(l => l.location_id === 'NYC')).toBeDefined();
-    expect(result.current.locations.find(l => l.location_id === 'LAX')).toBeDefined(); // From static
     expect(result.current.error).toBeNull();
     expect(mockFetchLocations).toHaveBeenCalledTimes(1);
   });
@@ -103,10 +102,8 @@ describe('useLocations', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    // Assert - should have all static locations as fallback
-    expect(result.current.locations.length).toBe(12); // 12 static locations
-    expect(result.current.locations.find(l => l.location_id === 'JFK')).toBeDefined();
-    expect(result.current.locations.find(l => l.location_id === 'LAX')).toBeDefined();
+    // Assert - on error, locations remain empty (no static fallback in current implementation)
+    expect(result.current.locations.length).toBe(0);
     expect(result.current.error).toEqual(mockError);
   });
 
@@ -122,8 +119,8 @@ describe('useLocations', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    // Assert - should use static locations and create an Error instance
-    expect(result.current.locations.length).toBe(12);
+    // Assert - on error, locations remain empty and error is created
+    expect(result.current.locations.length).toBe(0);
     expect(result.current.error).toBeInstanceOf(Error);
     expect(result.current.error?.message).toBe('Failed to fetch locations');
   });

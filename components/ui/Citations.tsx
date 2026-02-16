@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, FileText, ExternalLink } from 'lucide-react';
-import { clsx } from 'clsx';
+import { ChevronDown, ChevronUp, FileText } from 'lucide-react';
 import type { ChatCitation } from '../../types';
 
 interface CitationsProps {
@@ -8,47 +7,42 @@ interface CitationsProps {
 }
 
 /**
- * Collapsible citations component for displaying review sources
- * in the AI chat responses.
+ * Extract location code from S3 URI
+ */
+function getLocationCode(location: string | undefined): string {
+  if (!location) return 'Source';
+  const match = location.match(/([A-Z]{3})_reviews\.json/);
+  return match?.[1] ?? 'Source';
+}
+
+/**
+ * Citations component - simple collapsible sources list
+ * Just shows location and relevance score, no messy text
  */
 export function Citations({ citations }: CitationsProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [expandedCitations, setExpandedCitations] = useState<Set<number>>(new Set());
 
-  if (!citations || citations.length === 0) {
+  if (!citations?.length) {
     return null;
   }
 
-  const toggleCitation = (index: number) => {
-    setExpandedCitations((prev) => {
-      const next = new Set(prev);
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
-      return next;
-    });
-  };
+  // Group citations by location for cleaner display
+  const locationCounts = citations.reduce((acc, c) => {
+    const loc = getLocationCode(c.location);
+    acc[loc] = (acc[loc] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
-  // Extract location name from S3 URI
-  const getLocationName = (uri?: string): string => {
-    if (!uri) return 'Unknown';
-    const match = uri.match(/([A-Z]{3})_reviews\.json/);
-    return match ? match[1] : 'Review';
-  };
-
-  // Format relevance score as percentage
-  const formatScore = (score: number): string => {
-    return `${Math.round(score * 100)}%`;
-  };
+  const locationSummary = Object.entries(locationCounts)
+    .map(([loc, count]) => `${count} from ${loc}`)
+    .join(', ');
 
   return (
-    <div className="mt-4 pt-4 border-t border-white/10">
-      {/* Toggle Header */}
+    <div className="mt-4 pt-4 border-t-2 border-accent-primary/20">
+      {/* Collapsible Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center gap-2 text-sm text-text-tertiary hover:text-text-secondary transition-colors w-full"
+        className="flex items-center gap-2 text-sm text-text-tertiary hover:text-accent-primary transition-colors"
       >
         <FileText size={14} />
         <span className="font-medium">
@@ -57,47 +51,25 @@ export function Citations({ citations }: CitationsProps) {
         {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
       </button>
 
-      {/* Citations List */}
+      {/* Expanded: simple list */}
       {isExpanded && (
-        <div className="mt-3 space-y-2 animate-fade-in">
-          {citations.map((citation, index) => (
-            <div
-              key={index}
-              className="bg-bg-base/50 rounded-lg border border-white/5 overflow-hidden"
-            >
-              {/* Citation Header */}
-              <button
-                onClick={() => toggleCitation(index)}
-                className="w-full px-3 py-2 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono bg-accent-primary/20 text-accent-primary px-1.5 py-0.5 rounded">
-                    [{index + 1}]
-                  </span>
-                  <span className="text-xs text-text-tertiary">
-                    {getLocationName(citation.location)}
-                  </span>
-                  <span className="text-xs text-text-muted">
-                    • Relevance: {formatScore(citation.score)}
-                  </span>
-                </div>
-                {expandedCitations.has(index) ? (
-                  <ChevronUp size={12} className="text-text-tertiary" />
-                ) : (
-                  <ChevronDown size={12} className="text-text-tertiary" />
-                )}
-              </button>
-
-              {/* Citation Content */}
-              {expandedCitations.has(index) && (
-                <div className="px-3 pb-3 animate-fade-in">
-                  <p className="text-xs text-text-secondary leading-relaxed bg-bg-surface/50 p-2 rounded border-l-2 border-accent-primary/50">
-                    "{citation.text}"
-                  </p>
-                </div>
-              )}
-            </div>
-          ))}
+        <div className="mt-3 text-xs text-text-muted">
+          <p>{locationSummary}</p>
+          <div className="mt-2 flex flex-wrap gap-1">
+            {citations.map((c, i) => {
+              const relevance = Math.round((c.score ?? 0) * 100);
+              return (
+                <span 
+                  key={i}
+                  className="inline-flex items-center gap-1 bg-bg-surface/50 px-2 py-1 rounded-none border border-accent-primary/20"
+                >
+                  <span className="font-mono text-accent-primary">[{i + 1}]</span>
+                  <span>{getLocationCode(c.location)}</span>
+                  <span className="text-text-muted">({relevance}%)</span>
+                </span>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

@@ -19,6 +19,10 @@ interface AppState {
   currentLocation: string;
   setLocation: (loc: string) => void;
   
+  // Brand State (Requirements: 6.1, 6.2, 6.3)
+  selectedBrand: string | null;
+  setSelectedBrand: (brand: string | null) => void;
+  
   // Chat State
   messages: ChatMessage[];
   isChatLoading: boolean;
@@ -56,8 +60,12 @@ interface AppState {
 }
 
 export const useStore = create<AppState>((set) => ({
-  currentLocation: 'JFK',
-  setLocation: (loc) => set({ currentLocation: loc }),
+  currentLocation: '',
+  setLocation: (loc) => set({ currentLocation: loc, selectedBrand: null }),
+  
+  // Brand State (Requirements: 6.1, 6.2, 6.3)
+  selectedBrand: null,
+  setSelectedBrand: (brand) => set({ selectedBrand: brand }),
 
   messages: [],
   isChatLoading: false,

@@ -2,13 +2,30 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { LocationSelector, MiniMap } from './LocationSelector';
+import { BrandPicker } from './BrandPicker/BrandPicker';
 import { MapPin, Bell, ChevronDown, Loader2 } from 'lucide-react';
 import { useStore } from '../store';
 import { useLocations } from '../hooks/useLocations';
+import type { BrandMetrics } from '../types/api';
 
 const Layout = () => {
-  const { currentLocation, setLocation } = useStore();
+  const { currentLocation, setLocation, selectedBrand, setSelectedBrand } = useStore();
   const { locations, isLoading: locationsLoading } = useLocations();
+
+  // Derive brands for the picker from the locations API
+  const brandsForPicker: BrandMetrics[] = React.useMemo(() => {
+    const loc = locations.find(l => l.location_id === currentLocation);
+    if (!loc?.brands?.length) return [];
+    return loc.brands.map(b => ({
+      brand: b.brand,
+      is_own_brand: !b.is_competitor,
+      total_reviews: 0,
+      average_rating: 0,
+      sentiment_breakdown: { positive: 0, neutral: 0, negative: 0 },
+      top_topics: [],
+      rating_distribution: {},
+    }));
+  }, [locations, currentLocation]);
   const [isLocationSelectorOpen, setIsLocationSelectorOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -75,6 +92,11 @@ const Layout = () => {
           </button>
 
           <div className="flex items-center gap-4">
+            <BrandPicker
+              brands={brandsForPicker}
+              selectedBrand={selectedBrand}
+              onSelectBrand={setSelectedBrand}
+            />
             <button className="p-2 text-text-secondary hover:text-accent-primary hover:bg-bg-hover rounded-none transition-colors relative border-2 border-transparent hover:border-accent-primary/30">
               <Bell size={20} />
               <span className="absolute top-2 right-2 w-2 h-2 bg-status-warning rounded-none border-2 border-bg-base"></span>
@@ -95,6 +117,7 @@ const Layout = () => {
         locations={locations}
         currentLocationId={currentLocation}
         onSelectLocation={handleLocationSelect}
+        onSelectBrand={setSelectedBrand}
       />
     </div>
   );
