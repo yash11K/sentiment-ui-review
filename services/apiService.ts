@@ -8,7 +8,7 @@
  */
 
 // Configuration
-const BASE_URL = 'http://localhost:8000';
+const BASE_URL = 'http://13.222.154.71:8000';
 const DEFAULT_TIMEOUT = 30000;
 
 /**
