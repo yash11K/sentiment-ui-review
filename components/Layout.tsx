@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { LocationSelector, MiniMap } from './LocationSelector';
 import { BrandPicker } from './BrandPicker/BrandPicker';
@@ -9,8 +9,12 @@ import { useLocations } from '../hooks/useLocations';
 import type { BrandMetrics } from '../types/api';
 
 const Layout = () => {
+  const location = useLocation();
   const { currentLocation, setLocation, selectedBrand, setSelectedBrand } = useStore();
   const { locations, isLoading: locationsLoading } = useLocations();
+  
+  // Hide location selector on Reddit page
+  const isRedditPage = location.pathname === '/reddit';
 
   // Derive brands for the picker from the locations API
   const brandsForPicker: BrandMetrics[] = React.useMemo(() => {
@@ -54,42 +58,46 @@ const Layout = () => {
         {/* Top Header */}
         <header className="min-h-[5rem] border-b-2 border-accent-primary/20 bg-bg-base/80 backdrop-blur-md sticky top-0 z-40 flex items-center justify-between px-8 py-3">
           
-          {/* Location Picker Button */}
-          <button 
-            className="flex items-center gap-3 p-2 rounded-none bg-bg-elevated hover:bg-bg-hover transition-colors border-2 border-accent-primary/20 hover:border-accent-primary group"
-            onClick={() => setIsLocationSelectorOpen(true)}
-            aria-label="Select location"
-          >
-            {/* Mini Map Preview */}
-            {currentLocationObj ? (
-              <div className="w-16 h-12 rounded-none overflow-hidden border-2 border-accent-primary/30 flex-shrink-0">
-                <MiniMap 
-                  latitude={currentLocationObj.latitude} 
-                  longitude={currentLocationObj.longitude}
-                  className="w-full h-full"
-                />
+          {/* Location Picker Button - hidden on Reddit page */}
+          {!isRedditPage ? (
+            <button 
+              className="flex items-center gap-3 p-2 rounded-none bg-bg-elevated hover:bg-bg-hover transition-colors border-2 border-accent-primary/20 hover:border-accent-primary group"
+              onClick={() => setIsLocationSelectorOpen(true)}
+              aria-label="Select location"
+            >
+              {/* Mini Map Preview */}
+              {currentLocationObj ? (
+                <div className="w-16 h-12 rounded-none overflow-hidden border-2 border-accent-primary/30 flex-shrink-0">
+                  <MiniMap 
+                    latitude={currentLocationObj.latitude} 
+                    longitude={currentLocationObj.longitude}
+                    className="w-full h-full"
+                  />
+                </div>
+              ) : (
+                <div className="w-16 h-12 rounded-none bg-bg-surface flex items-center justify-center flex-shrink-0 border-2 border-accent-primary/30">
+                  <MapPin size={20} className="text-accent-primary" />
+                </div>
+              )}
+              
+              {/* Location Name */}
+              <div className="flex flex-col items-start">
+                <span className="text-sm font-medium text-text-primary max-w-[140px] truncate">
+                  {currentLocationObj?.name?.replace('Avis Car Rental - ', '') || currentLocation}
+                </span>
+                <span className="text-xs text-text-tertiary flex items-center gap-1">
+                  Change location
+                  {locationsLoading ? (
+                    <Loader2 size={10} className="animate-spin" />
+                  ) : (
+                    <ChevronDown size={10} />
+                  )}
+                </span>
               </div>
-            ) : (
-              <div className="w-16 h-12 rounded-none bg-bg-surface flex items-center justify-center flex-shrink-0 border-2 border-accent-primary/30">
-                <MapPin size={20} className="text-accent-primary" />
-              </div>
-            )}
-            
-            {/* Location Name */}
-            <div className="flex flex-col items-start">
-              <span className="text-sm font-medium text-text-primary max-w-[140px] truncate">
-                {currentLocationObj?.name?.replace('Avis Car Rental - ', '') || currentLocation}
-              </span>
-              <span className="text-xs text-text-tertiary flex items-center gap-1">
-                Change location
-                {locationsLoading ? (
-                  <Loader2 size={10} className="animate-spin" />
-                ) : (
-                  <ChevronDown size={10} />
-                )}
-              </span>
-            </div>
-          </button>
+            </button>
+          ) : (
+            <div /> 
+          )}
 
           <div className="flex items-center gap-4">
             <BrandPicker
@@ -110,15 +118,17 @@ const Layout = () => {
         </div>
       </main>
 
-      {/* Location Selector Modal */}
-      <LocationSelector
-        isOpen={isLocationSelectorOpen}
-        onClose={() => setIsLocationSelectorOpen(false)}
-        locations={locations}
-        currentLocationId={currentLocation}
-        onSelectLocation={handleLocationSelect}
-        onSelectBrand={setSelectedBrand}
-      />
+      {/* Location Selector Modal - not needed on Reddit page */}
+      {!isRedditPage && (
+        <LocationSelector
+          isOpen={isLocationSelectorOpen}
+          onClose={() => setIsLocationSelectorOpen(false)}
+          locations={locations}
+          currentLocationId={currentLocation}
+          onSelectLocation={handleLocationSelect}
+          onSelectBrand={setSelectedBrand}
+        />
+      )}
     </div>
   );
 };

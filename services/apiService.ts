@@ -472,3 +472,20 @@ export async function fetchMarketPosition(locationId: string): Promise<MarketPos
     `/api/competitive/market-position?location_id=${encodeURIComponent(locationId)}`
   );
 }
+
+
+// ============================================================================
+// Reddit Dashboard Stats API
+// ============================================================================
+
+import type { RedditDashboardStats } from '../types/api';
+
+/**
+ * Fetch Reddit dashboard stats.
+ * Used for the Reddit page.
+ * 
+ * @returns Promise resolving to RedditDashboardStats data
+ */
+export async function fetchRedditDashboardStats(): Promise<RedditDashboardStats> {
+  return apiFetch<RedditDashboardStats>('/api/reddit/stats');
+}

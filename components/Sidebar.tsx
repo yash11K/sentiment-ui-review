@@ -9,7 +9,8 @@ import {
   ChevronLeft,
   ChevronRight,
   FolderOpen,
-  Swords
+  Swords,
+  MessageCircle
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -23,6 +24,7 @@ const Sidebar = ({ isCollapsed, onToggle }: SidebarProps) => {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
     { icon: Sparkles, label: 'AI Analysis', path: '/ai-analysis', badge: 'New' },
     { icon: MessageSquareText, label: 'Reviews', path: '/reviews' },
+    { icon: MessageCircle, label: 'Reddit', path: '/reddit' },
     { icon: Swords, label: 'Competitive', path: '/competitive', badge: 'New' },
     { icon: FolderOpen, label: 'Location Manager', path: '/locations' },
   ];

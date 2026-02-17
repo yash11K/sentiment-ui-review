@@ -9,10 +9,18 @@ const OWN_COLOR = '#7C3AED';
 const COMPETITOR_COLOR = '#EF4444';
 
 interface GapAnalysisChartProps {
-  topics: GapAnalysisResponse['topics'];
+  topics: GapAnalysisResponse['topics'] | undefined | null;
 }
 
 export const GapAnalysisChart: React.FC<GapAnalysisChartProps> = ({ topics }) => {
+  if (!topics || topics.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full text-text-tertiary">
+        No gap analysis data available
+      </div>
+    );
+  }
+
   const { strengths, weaknesses } = partitionGapTopics(topics);
   const data = [...strengths, ...weaknesses];
 

@@ -465,3 +465,38 @@ export interface JobStatusResponse {
   error: string | null;
 }
 
+
+// ============================================================================
+// Reddit Dashboard Stats Types
+// ============================================================================
+
+/**
+ * Reddit Subreddit Breakdown Item
+ */
+export interface RedditSubredditBreakdown {
+  subreddit: string;
+  count: number;
+}
+
+/**
+ * Reddit Dashboard Stats Response
+ * Returned by GET /api/reddit/stats?brand={brand}
+ * Used for Reddit tab on dashboard
+ */
+export interface RedditDashboardStats {
+  source: string;
+  brand?: string;
+  total_reviews: number;
+  average_rating: number;
+  sentiment_breakdown: {
+    positive: number;
+    negative: number;
+    neutral: number;
+  };
+  top_topics: Array<{
+    topic: string;
+    count: number;
+  }>;
+  subreddit_breakdown: RedditSubredditBreakdown[];
+  generated_at?: string;
+}

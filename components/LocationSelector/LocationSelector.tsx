@@ -92,30 +92,37 @@ export function LocationSelector({
     const query = searchQuery.toLowerCase();
     return locations.filter(
       (loc) =>
-        loc.name.toLowerCase().includes(query) ||
-        loc.address.toLowerCase().includes(query) ||
-        loc.location_id.toLowerCase().includes(query)
+        (loc.name?.toLowerCase().includes(query)) ||
+        (loc.address?.toLowerCase().includes(query)) ||
+        (loc.location_id?.toLowerCase().includes(query))
     );
   }, [locations, searchQuery]);
+
+  // Filter locations with valid coordinates for the map
+  const locationsWithCoords = useMemo(() => {
+    return locations.filter(
+      (loc) => loc.latitude != null && loc.longitude != null
+    );
+  }, [locations]);
 
   // Calculate map center - focus on hovered/focused location or current
   const mapCenter = useMemo((): [number, number] => {
     const focusLocation = focusedLocationId 
-      ? locations.find((l) => l.location_id === focusedLocationId)
-      : locations.find((l) => l.location_id === currentLocationId);
+      ? locationsWithCoords.find((l) => l.location_id === focusedLocationId)
+      : locationsWithCoords.find((l) => l.location_id === currentLocationId);
     
-    if (focusLocation) {
+    if (focusLocation && focusLocation.latitude != null && focusLocation.longitude != null) {
       return [focusLocation.latitude, focusLocation.longitude];
     }
-    if (locations.length > 0) {
-      const avgLat = locations.reduce((sum, l) => sum + l.latitude, 0) / locations.length;
-      const avgLng = locations.reduce((sum, l) => sum + l.longitude, 0) / locations.length;
+    if (locationsWithCoords.length > 0) {
+      const avgLat = locationsWithCoords.reduce((sum, l) => sum + (l.latitude || 0), 0) / locationsWithCoords.length;
+      const avgLng = locationsWithCoords.reduce((sum, l) => sum + (l.longitude || 0), 0) / locationsWithCoords.length;
       return [avgLat, avgLng];
     }
     return [39.8283, -98.5795]; // Center of US
-  }, [locations, currentLocationId, focusedLocationId]);
+  }, [locationsWithCoords, currentLocationId, focusedLocationId]);
 
-  const mapZoom = focusedLocationId ? 10 : (locations.length === 1 ? 10 : 4);
+  const mapZoom = focusedLocationId ? 10 : (locationsWithCoords.length === 1 ? 10 : 4);
 
   const handleSelect = (locationId: string) => {
     setPendingLocationId(locationId);
@@ -228,10 +235,10 @@ export function LocationSelector({
                 url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
               />
               <MapController center={mapCenter} zoom={mapZoom} />
-              {locations.map((location) => (
+              {locationsWithCoords.map((location) => (
                 <Marker
                   key={location.location_id}
-                  position={[location.latitude, location.longitude]}
+                  position={[location.latitude!, location.longitude!]}
                   icon={
                     location.location_id === currentLocationId || 
                     location.location_id === hoveredLocationId 
@@ -246,8 +253,8 @@ export function LocationSelector({
                 >
                   <Popup>
                     <div className="text-sm min-w-[180px]">
-                      <p className="font-semibold text-gray-900">{location.name.replace('Avis Car Rental - ', '')}</p>
-                      <p className="text-gray-600 text-xs mt-1">{location.address}</p>
+                      <p className="font-semibold text-gray-900">{(location.name || location.location_id).replace('Avis Car Rental - ', '')}</p>
+                      <p className="text-gray-600 text-xs mt-1">{location.address || 'No address available'}</p>
                       <button 
                         className="mt-2 w-full py-1.5 bg-purple-600 text-white text-xs font-medium rounded-none hover:bg-purple-700 transition-colors"
                         onClick={() => handleSelect(location.location_id)}
@@ -329,14 +336,14 @@ export function LocationSelector({
                               isSelected ? 'text-accent-primary' : 'text-text-primary'
                             )}
                           >
-                            {location.name.replace('Avis Car Rental - ', '')}
+                            {(location.name || location.location_id).replace('Avis Car Rental - ', '')}
                           </span>
                           <span className="text-[10px] text-text-tertiary bg-bg-surface px-1.5 py-0.5 rounded-none font-mono border border-accent-primary/20">
                             {location.location_id}
                           </span>
                         </div>
                         <p className="text-sm text-text-tertiary truncate mt-0.5">
-                          {location.address}
+                          {location.address || 'No address available'}
                         </p>
                       </div>
                       

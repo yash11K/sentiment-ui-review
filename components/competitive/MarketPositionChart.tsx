@@ -9,19 +9,19 @@ const OWN_COLOR = '#7C3AED';
 const COMPETITOR_COLOR = '#EF4444';
 
 interface MarketPositionChartProps {
-  brands: MarketPositionResponse['brands'];
+  brands: MarketPositionResponse['brands'] | undefined | null;
 }
 
 export const MarketPositionChart: React.FC<MarketPositionChartProps> = ({ brands }) => {
-  const sorted = [...brands].sort((a, b) => b.review_share_pct - a.review_share_pct);
-
-  if (sorted.length === 0) {
+  if (!brands || brands.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-text-tertiary">
         No market position data available
       </div>
     );
   }
+
+  const sorted = [...brands].sort((a, b) => b.review_share_pct - a.review_share_pct);
 
   return (
     <div className="space-y-4">

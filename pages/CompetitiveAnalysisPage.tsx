@@ -410,37 +410,37 @@ const CompetitiveAnalysisPage = () => {
 
       {/* Gap Analysis & Market Position */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {gapAnalysis ? (
-          <Card className="min-h-[380px] flex flex-col">
-            <div className="mb-4">
-              <h3 className="font-bold text-lg text-text-primary">Gap Analysis</h3>
-              <p className="text-text-tertiary text-sm">Strengths and weaknesses vs competitors by topic</p>
-            </div>
-            <div className="flex-1">
+        <Card className="min-h-[380px] flex flex-col">
+          <div className="mb-4">
+            <h3 className="font-bold text-lg text-text-primary">Gap Analysis</h3>
+            <p className="text-text-tertiary text-sm">Strengths and weaknesses vs competitors by topic</p>
+          </div>
+          <div className="flex-1">
+            {gapAnalysis?.topics ? (
               <GapAnalysisChart topics={gapAnalysis.topics} />
-            </div>
-          </Card>
-        ) : !isLoading && error ? (
-          <Card className="min-h-[380px] flex items-center justify-center">
-            <ErrorState message="Failed to load gap analysis data" onRetry={refetch} />
-          </Card>
-        ) : null}
+            ) : (
+              <div className="flex items-center justify-center h-full text-text-tertiary">
+                {error ? 'Failed to load gap analysis data' : 'No gap analysis data available'}
+              </div>
+            )}
+          </div>
+        </Card>
 
-        {marketPosition ? (
-          <Card className="min-h-[380px] flex flex-col">
-            <div className="mb-4">
-              <h3 className="font-bold text-lg text-text-primary">Market Position</h3>
-              <p className="text-text-tertiary text-sm">Brand review share and rating rankings</p>
-            </div>
-            <div className="flex-1">
+        <Card className="min-h-[380px] flex flex-col">
+          <div className="mb-4">
+            <h3 className="font-bold text-lg text-text-primary">Market Position</h3>
+            <p className="text-text-tertiary text-sm">Brand review share and rating rankings</p>
+          </div>
+          <div className="flex-1">
+            {marketPosition?.brands ? (
               <MarketPositionChart brands={marketPosition.brands} />
-            </div>
-          </Card>
-        ) : !isLoading && error ? (
-          <Card className="min-h-[380px] flex items-center justify-center">
-            <ErrorState message="Failed to load market position data" onRetry={refetch} />
-          </Card>
-        ) : null}
+            ) : (
+              <div className="flex items-center justify-center h-full text-text-tertiary">
+                {error ? 'Failed to load market position data' : 'No market position data available'}
+              </div>
+            )}
+          </div>
+        </Card>
       </div>
 
       {/* Topic Comparison Table */}
