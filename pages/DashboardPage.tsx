@@ -4,7 +4,6 @@ import {
   Star, 
   MessageSquare, 
   SmilePlus, 
-  TrendingUp, 
   AlertTriangle, 
   ArrowRight,
   ChevronDown,
@@ -236,14 +235,6 @@ const DashboardPage = () => {
         color: 'text-green-400', 
         bg: 'bg-green-400/10' 
       },
-      { 
-        label: 'NPS Score', 
-        value: '+45', // Mock - API doesn't provide NPS data
-        sub: 'Stable', // Mock trend
-        icon: TrendingUp, 
-        color: 'text-purple-400', 
-        bg: 'bg-purple-400/10' 
-      },
     ];
   }, [summary]);
 
@@ -364,13 +355,13 @@ const DashboardPage = () => {
 
       {/* KPI Grid - Uses real API data from summary (Requirement 3.1) */}
       {summary === null && isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => (
             <SkeletonKPICard key={i} />
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {kpiData.map((kpi, idx) => (
             <Card key={idx} className="p-5 hover:border-accent-primary transition-colors group">
               <div className="flex justify-between items-start mb-4">
