@@ -157,10 +157,10 @@ describe('useDashboardData', () => {
     expect(result.current.error).toBeNull();
 
     // Verify all API functions were called with correct location
-    expect(mockFetchSummary).toHaveBeenCalledWith('JFK');
-    expect(mockFetchTrends).toHaveBeenCalledWith('JFK', 'week');
-    expect(mockFetchTopics).toHaveBeenCalledWith('JFK');
-    expect(mockFetchSentiment).toHaveBeenCalledWith('JFK');
+    expect(mockFetchSummary).toHaveBeenCalledWith('JFK', undefined);
+    expect(mockFetchTrends).toHaveBeenCalledWith('JFK', 'week', undefined);
+    expect(mockFetchTopics).toHaveBeenCalledWith('JFK', undefined);
+    expect(mockFetchSentiment).toHaveBeenCalledWith('JFK', undefined);
   });
 
   it('should set loading state while fetching (Requirement 3.5)', async () => {
@@ -292,7 +292,7 @@ describe('useDashboardData', () => {
     });
 
     // Verify initial calls
-    expect(mockFetchSummary).toHaveBeenCalledWith('JFK');
+    expect(mockFetchSummary).toHaveBeenCalledWith('JFK', undefined);
     expect(mockFetchSummary).toHaveBeenCalledTimes(1);
 
     // Change location to LAX
@@ -303,10 +303,10 @@ describe('useDashboardData', () => {
     });
 
     // Assert - should have been called with new location
-    expect(mockFetchSummary).toHaveBeenLastCalledWith('LAX');
-    expect(mockFetchTrends).toHaveBeenLastCalledWith('LAX', 'week');
-    expect(mockFetchTopics).toHaveBeenLastCalledWith('LAX');
-    expect(mockFetchSentiment).toHaveBeenLastCalledWith('LAX');
+    expect(mockFetchSummary).toHaveBeenLastCalledWith('LAX', undefined);
+    expect(mockFetchTrends).toHaveBeenLastCalledWith('LAX', 'week', undefined);
+    expect(mockFetchTopics).toHaveBeenLastCalledWith('LAX', undefined);
+    expect(mockFetchSentiment).toHaveBeenLastCalledWith('LAX', undefined);
   });
 
   it('should not fetch if locationId is empty', async () => {

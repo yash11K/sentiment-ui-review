@@ -247,69 +247,8 @@ const DashboardPage = () => {
     ];
   }, [summary]);
 
-  // Show loading state while data is being fetched (Requirement 3.5)
-  if (isLoading) {
-    return (
-      <div className="space-y-6 animate-fade-in pb-10">
-        {/* Skeleton Alert Banner */}
-        <div className="rounded-none bg-bg-elevated p-4 flex items-center gap-4 border-2 border-accent-primary/20">
-          <Skeleton variant="rounded" width={48} height={48} />
-          <div className="flex-1 space-y-2">
-            <Skeleton variant="text" width={200} height={20} />
-            <Skeleton variant="text" width="80%" height={14} />
-          </div>
-        </div>
-
-        {/* Skeleton Header */}
-        <div className="flex justify-between items-center">
-          <div className="space-y-2">
-            <Skeleton variant="text" width={200} height={28} />
-            <Skeleton variant="text" width={280} height={16} />
-          </div>
-          <div className="flex gap-2">
-            <Skeleton variant="rounded" width={90} height={36} />
-            <Skeleton variant="rounded" width={110} height={36} />
-          </div>
-        </div>
-
-        {/* Skeleton KPI Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <SkeletonKPICard key={i} />
-          ))}
-        </div>
-
-        {/* Skeleton Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <SkeletonChartCard className="lg:col-span-2" height={250} />
-          <SkeletonChartCard height={250} />
-        </div>
-
-        {/* Skeleton Second Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <SkeletonChartCard className="lg:col-span-2" height={300} />
-          <div className="p-6 rounded-none bg-bg-elevated border-2 border-accent-primary/20 space-y-6">
-            <div className="space-y-2">
-              <Skeleton variant="text" width={120} height={20} />
-              <Skeleton variant="text" width={150} height={14} />
-            </div>
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="space-y-2">
-                <div className="flex justify-between">
-                  <Skeleton variant="text" width={80} height={14} />
-                  <Skeleton variant="text" width={40} height={14} />
-                </div>
-                <Skeleton variant="rounded" width="100%" height={8} />
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // Show error state with retry functionality (Requirement 3.6)
-  if (error) {
+  if (error && !summary && !trends && !topics && !sentiment && !highlight) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <ErrorState 
@@ -324,7 +263,15 @@ const DashboardPage = () => {
     <div className="space-y-6 animate-fade-in pb-10">
       
       {/* Smart Alert Banner - Dynamic from API */}
-      {highlight?.highlight && (
+      {highlight === null && isLoading ? (
+        <div className="rounded-none bg-bg-elevated p-4 flex items-center gap-4 border-2 border-accent-primary/20">
+          <Skeleton variant="rounded" width={48} height={48} />
+          <div className="flex-1 space-y-2">
+            <Skeleton variant="text" width={200} height={20} />
+            <Skeleton variant="text" width="80%" height={14} />
+          </div>
+        </div>
+      ) : highlight?.highlight && (
         <div className={clsx(
           "rounded-none border-l-4 bg-bg-elevated p-4 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative overflow-hidden border-2",
           highlight.highlight.severity === 'high' ? 'border-status-warning border-status-warning/30' : 
@@ -416,26 +363,40 @@ const DashboardPage = () => {
       </div>
 
       {/* KPI Grid - Uses real API data from summary (Requirement 3.1) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpiData.map((kpi, idx) => (
-          <Card key={idx} className="p-5 hover:border-accent-primary transition-colors group">
-            <div className="flex justify-between items-start mb-4">
-              <div className={clsx("p-3 rounded-none transition-colors group-hover:scale-110 duration-200", kpi.bg)}>
-                <kpi.icon className={kpi.color} size={24} />
+      {summary === null && isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <SkeletonKPICard key={i} />
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {kpiData.map((kpi, idx) => (
+            <Card key={idx} className="p-5 hover:border-accent-primary transition-colors group">
+              <div className="flex justify-between items-start mb-4">
+                <div className={clsx("p-3 rounded-none transition-colors group-hover:scale-110 duration-200", kpi.bg)}>
+                  <kpi.icon className={kpi.color} size={24} />
+                </div>
+                <span className={clsx("text-xs font-medium px-2 py-1 rounded-none", kpi.sub.includes('↗') ? 'bg-green-500/10 text-green-600' : kpi.sub.includes('↘') ? 'bg-red-500/10 text-red-600' : 'bg-gray-500/10 text-gray-600')}>
+                  {kpi.sub}
+                </span>
               </div>
-              <span className={clsx("text-xs font-medium px-2 py-1 rounded-none", kpi.sub.includes('↗') ? 'bg-green-500/10 text-green-600' : kpi.sub.includes('↘') ? 'bg-red-500/10 text-red-600' : 'bg-gray-500/10 text-gray-600')}>
-                {kpi.sub}
-              </span>
-            </div>
-            <div>
-              <p className="text-text-tertiary text-sm font-medium">{kpi.label}</p>
-              <h4 className="text-3xl font-bold font-display mt-1">{kpi.value}</h4>
-            </div>
-          </Card>
-        ))}
-      </div>
+              <div>
+                <p className="text-text-tertiary text-sm font-medium">{kpi.label}</p>
+                <h4 className="text-3xl font-bold font-display mt-1">{kpi.value}</h4>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* New Row: Topic Distribution & Sentiment Breakdown */}
+      {(topics === null || sentiment === null) && isLoading ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <SkeletonChartCard className="lg:col-span-2" height={250} />
+          <SkeletonChartCard height={250} />
+        </div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Topic Distribution */}
         <Card className="lg:col-span-2 min-h-[350px] flex flex-col">
@@ -518,8 +479,15 @@ const DashboardPage = () => {
           </div>
         </Card>
       </div>
+      )}
 
       {/* Existing Row: Sentiment Velocity & Topics */}
+      {(trends === null || topics === null) && isLoading ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <SkeletonChartCard className="lg:col-span-2" height={300} />
+          <SkeletonChartCard height={300} />
+        </div>
+      ) : (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Sentiment Velocity */}
@@ -607,6 +575,7 @@ const DashboardPage = () => {
           </Button>
         </Card>
       </div>
+      )}
     </div>
   );
 };

@@ -74,6 +74,7 @@ export function useDashboardData(locationId: string, period: TrendsPeriod = DEFA
   const highlight = useStore((state) => state.dashboardHighlight);
   const isLoading = useStore((state) => state.dashboardLoading);
   const error = useStore((state) => state.dashboardError);
+  const selectedBrand = useStore((state) => state.selectedBrand);
   
   // Get store actions
   const setDashboardData = useStore((state) => state.setDashboardData);
@@ -81,7 +82,10 @@ export function useDashboardData(locationId: string, period: TrendsPeriod = DEFA
   const setDashboardError = useStore((state) => state.setDashboardError);
 
   /**
-   * Fetch all dashboard data in parallel.
+   * Fetch all dashboard data in parallel with incremental updates.
+   * Each API call updates the store independently as it resolves,
+   * so the page progressively renders sections as data arrives
+   * instead of waiting for the slowest endpoint.
    * 
    * Requirements 3.1-3.4: Fetch summary, trends, topics, and sentiment data
    * Requirement 3.5: Set loading state while fetching
@@ -92,42 +96,53 @@ export function useDashboardData(locationId: string, period: TrendsPeriod = DEFA
       return;
     }
 
-    // Requirement 3.5: Set loading state
-    setDashboardLoading(true);
-    setDashboardError(null);
+    const brand = selectedBrand ?? undefined;
 
-    try {
-      // Fetch all dashboard data in parallel using Promise.all
-      // Requirements 3.1, 3.2, 3.3, 3.4
-      const [summaryData, trendsData, topicsData, sentimentData, highlightData] = await Promise.all([
-        fetchDashboardSummary(locationId),
-        fetchDashboardTrends(locationId, period),
-        fetchDashboardTopics(locationId),
-        fetchDashboardSentiment(locationId),
-        fetchDashboardHighlight(locationId),
-      ]);
+    // Requirement 3.5: Set loading state and clear stale data
+    setDashboardData({
+      summary: null,
+      trends: null,
+      topics: null,
+      sentiment: null,
+      highlight: null,
+      loading: true,
+      error: null,
+    });
 
-      // Only update state if component is still mounted
-      if (isMountedRef.current) {
-        setDashboardData({
-          summary: summaryData,
-          trends: trendsData,
-          topics: topicsData,
-          sentiment: sentimentData,
-          highlight: highlightData,
-          loading: false,
-          error: null,
-        });
-      }
-    } catch (err) {
-      // Requirement 3.6: Handle errors
-      if (isMountedRef.current) {
-        const errorInstance = err instanceof Error ? err : new Error('Failed to fetch dashboard data');
-        setDashboardError(errorInstance);
-        setDashboardLoading(false);
-      }
+    // Fire all requests in parallel — each updates the store as it resolves
+    const results = await Promise.allSettled([
+      fetchDashboardSummary(locationId, brand).then((data) => {
+        if (isMountedRef.current) setDashboardData({ summary: data });
+      }),
+      fetchDashboardTrends(locationId, period, brand).then((data) => {
+        if (isMountedRef.current) setDashboardData({ trends: data });
+      }),
+      fetchDashboardTopics(locationId, brand).then((data) => {
+        if (isMountedRef.current) setDashboardData({ topics: data });
+      }),
+      fetchDashboardSentiment(locationId, brand).then((data) => {
+        if (isMountedRef.current) setDashboardData({ sentiment: data });
+      }),
+      fetchDashboardHighlight(locationId, brand).then((data) => {
+        if (isMountedRef.current) setDashboardData({ highlight: data });
+      }),
+    ]);
+
+    if (!isMountedRef.current) return;
+
+    // Requirement 3.6: Surface the first failure if any request rejected
+    const firstFailure = results.find(
+      (r): r is PromiseRejectedResult => r.status === 'rejected'
+    );
+
+    if (firstFailure) {
+      const err = firstFailure.reason;
+      const errorInstance = err instanceof Error ? err : new Error('Failed to fetch dashboard data');
+      setDashboardError(errorInstance);
     }
-  }, [locationId, period, setDashboardData, setDashboardLoading, setDashboardError]);
+
+    setDashboardLoading(false);
+  }, [locationId, period, selectedBrand, setDashboardData, setDashboardLoading, setDashboardError]);
 
   /**
    * Refetch function for retry functionality.

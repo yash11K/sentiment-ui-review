@@ -8,7 +8,7 @@
  */
 
 // Configuration
-const BASE_URL = 'http://13.222.154.71:8000';
+const BASE_URL = 'http://localhost:8000';
 const DEFAULT_TIMEOUT = 30000;
 
 /**
@@ -132,8 +132,11 @@ import type {
  * @param locationId - The location identifier (e.g., "JFK")
  * @returns Promise resolving to DashboardSummary data
  */
-export async function fetchDashboardSummary(locationId: string): Promise<DashboardSummary> {
-  return apiFetch<DashboardSummary>(`/api/dashboard/summary?location_id=${encodeURIComponent(locationId)}`);
+export async function fetchDashboardSummary(locationId: string, brand?: string): Promise<DashboardSummary> {
+  const params = new URLSearchParams();
+  if (locationId) params.set('location_id', locationId);
+  if (brand) params.set('brand', brand);
+  return apiFetch<DashboardSummary>(`/api/dashboard/summary?${params.toString()}`);
 }
 
 /**
@@ -148,11 +151,14 @@ export async function fetchDashboardSummary(locationId: string): Promise<Dashboa
  */
 export async function fetchDashboardTrends(
   locationId: string,
-  period: 'day' | 'week' | 'month'
+  period: 'day' | 'week' | 'month',
+  brand?: string
 ): Promise<TrendsResponse> {
-  return apiFetch<TrendsResponse>(
-    `/api/dashboard/trends?location_id=${encodeURIComponent(locationId)}&period=${encodeURIComponent(period)}`
-  );
+  const params = new URLSearchParams();
+  if (locationId) params.set('location_id', locationId);
+  params.set('period', period);
+  if (brand) params.set('brand', brand);
+  return apiFetch<TrendsResponse>(`/api/dashboard/trends?${params.toString()}`);
 }
 
 /**
@@ -164,8 +170,11 @@ export async function fetchDashboardTrends(
  * @param locationId - The location identifier (e.g., "JFK")
  * @returns Promise resolving to TopicsResponse data
  */
-export async function fetchDashboardTopics(locationId: string): Promise<TopicsResponse> {
-  return apiFetch<TopicsResponse>(`/api/dashboard/topics?location_id=${encodeURIComponent(locationId)}`);
+export async function fetchDashboardTopics(locationId: string, brand?: string): Promise<TopicsResponse> {
+  const params = new URLSearchParams();
+  if (locationId) params.set('location_id', locationId);
+  if (brand) params.set('brand', brand);
+  return apiFetch<TopicsResponse>(`/api/dashboard/topics?${params.toString()}`);
 }
 
 /**
@@ -177,8 +186,11 @@ export async function fetchDashboardTopics(locationId: string): Promise<TopicsRe
  * @param locationId - The location identifier (e.g., "JFK")
  * @returns Promise resolving to SentimentResponse data
  */
-export async function fetchDashboardSentiment(locationId: string): Promise<SentimentResponse> {
-  return apiFetch<SentimentResponse>(`/api/dashboard/sentiment-details?location_id=${encodeURIComponent(locationId)}`);
+export async function fetchDashboardSentiment(locationId: string, brand?: string): Promise<SentimentResponse> {
+  const params = new URLSearchParams();
+  if (locationId) params.set('location_id', locationId);
+  if (brand) params.set('brand', brand);
+  return apiFetch<SentimentResponse>(`/api/dashboard/sentiment-details?${params.toString()}`);
 }
 
 /**
@@ -187,8 +199,11 @@ export async function fetchDashboardSentiment(locationId: string): Promise<Senti
  * @param locationId - The location identifier (e.g., "JFK")
  * @returns Promise resolving to HighlightResponse data
  */
-export async function fetchDashboardHighlight(locationId: string): Promise<HighlightResponse> {
-  return apiFetch<HighlightResponse>(`/api/dashboard/highlight?location_id=${encodeURIComponent(locationId)}`);
+export async function fetchDashboardHighlight(locationId: string, brand?: string): Promise<HighlightResponse> {
+  const params = new URLSearchParams();
+  if (locationId) params.set('location_id', locationId);
+  if (brand) params.set('brand', brand);
+  return apiFetch<HighlightResponse>(`/api/dashboard/highlight?${params.toString()}`);
 }
 
 /**

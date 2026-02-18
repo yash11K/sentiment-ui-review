@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { LocationSelector, MiniMap } from './LocationSelector';
@@ -15,6 +15,14 @@ const Layout = () => {
   
   // Hide location selector on Reddit page
   const isRedditPage = location.pathname === '/reddit';
+
+  // Auto-select first location with brand "avis" when locations load and none is selected
+  useEffect(() => {
+    if (!locationsLoading && locations.length > 0 && !currentLocation) {
+      setLocation(locations[0].location_id);
+      setSelectedBrand('avis');
+    }
+  }, [locations, locationsLoading, currentLocation, setLocation, setSelectedBrand]);
 
   // Derive brands for the picker from the locations API
   const brandsForPicker: BrandMetrics[] = React.useMemo(() => {
@@ -48,6 +56,7 @@ const Layout = () => {
    */
   const handleLocationSelect = (locationId: string) => {
     setLocation(locationId);
+    setSelectedBrand('avis');
   };
 
   return (
@@ -82,7 +91,7 @@ const Layout = () => {
               
               {/* Location Name */}
               <div className="flex flex-col items-start">
-                <span className="text-sm font-medium text-text-primary max-w-[140px] truncate">
+                <span className="text-sm font-medium text-text-primary whitespace-nowrap pr-[5px]">
                   {currentLocationObj?.name?.replace('Avis Car Rental - ', '') || currentLocation}
                 </span>
                 <span className="text-xs text-text-tertiary flex items-center gap-1">
@@ -126,7 +135,7 @@ const Layout = () => {
           locations={locations}
           currentLocationId={currentLocation}
           onSelectLocation={handleLocationSelect}
-          onSelectBrand={setSelectedBrand}
+          isLoading={locationsLoading}
         />
       )}
     </div>
