@@ -168,6 +168,7 @@ const DashboardPage = () => {
   
   // Get current location from store
   const currentLocation = useStore((state) => state.currentLocation);
+  const selectedBrand = useStore((state) => state.selectedBrand);
   
   // Period state for trend data grouping
   const [period, setPeriod] = useState<TrendsPeriod>('week');
@@ -304,7 +305,12 @@ const DashboardPage = () => {
               highlight.highlight.severity === 'medium' ? 'text-yellow-500 hover:text-yellow-500 hover:bg-yellow-500/10' : 
               'text-blue-500 hover:text-blue-500 hover:bg-blue-500/10'
             )}
-            onClick={() => navigate('/ai-analysis?q=' + encodeURIComponent(highlight.highlight.analysis_query))}
+            onClick={() => {
+              const query = selectedBrand
+                ? `${highlight.highlight.analysis_query} for ${selectedBrand}`
+                : highlight.highlight.analysis_query;
+              navigate('/ai-analysis?q=' + encodeURIComponent(query));
+            }}
           >
             View Analysis <ArrowRight size={16} className="ml-1" />
           </Button>
