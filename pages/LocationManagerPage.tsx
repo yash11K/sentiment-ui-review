@@ -51,6 +51,7 @@ const formatDate = (dateStr: string): string => {
 };
 
 interface ResourceItemProps {
+  key?: React.Key;
   file: PendingFile;
   isProcessed: boolean;
   isSelected: boolean;
@@ -106,6 +107,7 @@ const ResourceItem = ({ file, isProcessed, isSelected, onToggle, disabled }: Res
 );
 
 interface ActiveJobCardProps {
+  key?: React.Key;
   jobId: string;
   job: JobStatusResponse;
 }
@@ -128,6 +130,7 @@ const ActiveJobCard = ({ jobId, job }: ActiveJobCardProps) => (
 );
 
 interface HistoryItemRowProps {
+  key?: React.Key;
   item: IngestionHistoryItem;
 }
 

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { VisualizationTag, ChatMessage, Review } from './types';
-import { DashboardSummary, TrendsResponse, TopicsResponse, SentimentResponse, Location, HighlightResponse } from './types/api';
+import { DashboardSummary, TrendsResponse, TopicsResponse, SentimentResponse, Location, HighlightResponse, Brand } from './types/api';
 
 /**
  * Dashboard data structure for partial updates
@@ -37,6 +37,12 @@ interface AppState {
   locationsLoading: boolean;
   setLocations: (locations: Location[]) => void;
   setLocationsLoading: (loading: boolean) => void;
+  
+  // Brands State
+  brands: Brand[];
+  brandsLoading: boolean;
+  setBrands: (brands: Brand[]) => void;
+  setBrandsLoading: (loading: boolean) => void;
   
   // Dashboard Data State (Requirements: 7.1)
   dashboardSummary: DashboardSummary | null;
@@ -83,6 +89,12 @@ export const useStore = create<AppState>((set) => ({
   locationsLoading: false,
   setLocations: (locations) => set({ locations }),
   setLocationsLoading: (loading) => set({ locationsLoading: loading }),
+  
+  // Brands State
+  brands: [],
+  brandsLoading: false,
+  setBrands: (brands) => set({ brands }),
+  setBrandsLoading: (loading) => set({ brandsLoading: loading }),
   
   // Dashboard Data State (Requirements: 7.1)
   dashboardSummary: null,

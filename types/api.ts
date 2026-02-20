@@ -13,6 +13,22 @@
 // ============================================================================
 
 /**
+ * Brand object used by the brands API
+ */
+export interface Brand {
+  brand_id: string;
+  name: string;
+}
+
+/**
+ * Brands Response
+ * Returned by GET /api/brands
+ */
+export interface BrandsResponse {
+  brands: (string | Brand)[];
+}
+
+/**
  * Dashboard Summary Response
  * Returned by GET /api/dashboard/summary
  */
@@ -499,4 +515,76 @@ export interface RedditDashboardStats {
   }>;
   subreddit_breakdown: RedditSubredditBreakdown[];
   generated_at?: string;
+}
+
+// ============================================================================
+// Reddit Intelligence Page Types
+// ============================================================================
+
+/**
+ * Reddit Stats Response (Intelligence Page)
+ * Returned by GET /api/reddit/stats?brand={brand}
+ */
+export interface RedditStatsResponse {
+  total_mentions: number;
+  positive_sentiment: number;
+  negative_sentiment: number;
+  neutral_sentiment: number;
+  trending_score: number;
+  top_subreddits: string[];
+}
+
+/**
+ * Reddit Trend Item
+ */
+export interface RedditTrendItem {
+  period: string;
+  mentions: number;
+  sentiment: number;
+}
+
+/**
+ * Reddit Trends Response
+ * Returned by GET /api/reddit/trends?brand={brand}&period=week
+ */
+export interface RedditTrendsResponse {
+  trends: RedditTrendItem[];
+}
+
+/**
+ * Reddit Post
+ */
+export interface RedditPost {
+  id: string;
+  subreddit: string;
+  title: string;
+  score: number;
+  comments: number;
+  sentiment: 'positive' | 'negative' | 'neutral';
+  date: string;
+  url: string;
+}
+
+/**
+ * Reddit Posts Response
+ * Returned by GET /api/reddit/posts?brand={brand}&subreddit={subreddit}
+ */
+export interface RedditPostsResponse {
+  posts: RedditPost[];
+}
+
+/**
+ * Reddit Sentiment Item
+ */
+export interface RedditSentimentItem {
+  name: string;
+  value: number;
+}
+
+/**
+ * Reddit Sentiment Response
+ * Returned by GET /api/reddit/sentiment?brand={brand}
+ */
+export interface RedditSentimentResponse {
+  sentiment: RedditSentimentItem[];
 }

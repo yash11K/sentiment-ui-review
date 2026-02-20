@@ -8,7 +8,7 @@
  */
 
 // Configuration
-const BASE_URL = 'http://54.90.177.97:8000';
+const BASE_URL = 'http://localhost:8000';
 const DEFAULT_TIMEOUT = 30000;
 
 /**
@@ -117,6 +117,7 @@ import type {
   CompetitiveTopicsResponse,
   GapAnalysisResponse,
   MarketPositionResponse,
+  BrandsResponse,
 } from '../types/api';
 
 // ============================================================================
@@ -253,6 +254,16 @@ export async function fetchReviewsByTopic(
  */
 export async function fetchLocations(): Promise<LocationsResponse> {
   return apiFetch<LocationsResponse>('/api/locations');
+}
+
+/**
+ * Fetch available brands.
+ * GET /api/brands
+ *
+ * @returns Promise resolving to BrandsResponse data
+ */
+export async function fetchBrands(): Promise<BrandsResponse> {
+  return apiFetch<BrandsResponse>('/api/brands');
 }
 
 /**
@@ -494,6 +505,12 @@ export async function fetchMarketPosition(locationId: string): Promise<MarketPos
 // ============================================================================
 
 import type { RedditDashboardStats } from '../types/api';
+import type {
+  RedditStatsResponse,
+  RedditTrendsResponse,
+  RedditPostsResponse,
+  RedditSentimentResponse,
+} from '../types/api';
 
 /**
  * Fetch Reddit dashboard stats.
@@ -503,4 +520,56 @@ import type { RedditDashboardStats } from '../types/api';
  */
 export async function fetchRedditDashboardStats(): Promise<RedditDashboardStats> {
   return apiFetch<RedditDashboardStats>('/api/reddit/stats');
+}
+
+// ============================================================================
+// Reddit Intelligence API Functions
+// ============================================================================
+
+/**
+ * Fetch aggregated Reddit stats for a brand.
+ * GET /api/reddit/stats?brand={brand}
+ */
+export async function fetchRedditStats(brand: string): Promise<RedditStatsResponse> {
+  return apiFetch<RedditStatsResponse>(
+    `/api/reddit/stats?brand=${encodeURIComponent(brand)}`
+  );
+}
+
+/**
+ * Fetch Reddit mention trends for a brand.
+ * GET /api/reddit/trends?brand={brand}&period={period}
+ */
+export async function fetchRedditTrends(
+  brand: string,
+  period: string = 'week'
+): Promise<RedditTrendsResponse> {
+  return apiFetch<RedditTrendsResponse>(
+    `/api/reddit/trends?brand=${encodeURIComponent(brand)}&period=${encodeURIComponent(period)}`
+  );
+}
+
+/**
+ * Fetch Reddit posts for a brand, optionally filtered by subreddit.
+ * GET /api/reddit/posts?brand={brand}&subreddit={subreddit}
+ */
+export async function fetchRedditPosts(
+  brand?: string,
+  subreddit?: string,
+  _limit?: number
+): Promise<RedditPostsResponse> {
+  const params = new URLSearchParams();
+  if (brand) params.set('brand', brand);
+  if (subreddit) params.set('subreddit', subreddit);
+  return apiFetch<RedditPostsResponse>(`/api/reddit/posts?${params.toString()}`);
+}
+
+/**
+ * Fetch Reddit sentiment distribution for a brand.
+ * GET /api/reddit/sentiment?brand={brand}
+ */
+export async function fetchRedditSentiment(brand: string): Promise<RedditSentimentResponse> {
+  return apiFetch<RedditSentimentResponse>(
+    `/api/reddit/sentiment?brand=${encodeURIComponent(brand)}`
+  );
 }

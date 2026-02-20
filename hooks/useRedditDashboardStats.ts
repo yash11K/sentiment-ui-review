@@ -18,9 +18,10 @@ interface UseRedditDashboardStatsResult {
 /**
  * Hook to fetch Reddit dashboard stats.
  * 
+ * @param _brand - Optional brand parameter (currently unused by the endpoint)
  * @returns Object containing stats, loading state, error state, and refetch function
  */
-export function useRedditDashboardStats(): UseRedditDashboardStatsResult {
+export function useRedditDashboardStats(_brand?: string): UseRedditDashboardStatsResult {
   const isMountedRef = useRef(true);
   
   const [stats, setStats] = useState<RedditDashboardStats | null>(null);
