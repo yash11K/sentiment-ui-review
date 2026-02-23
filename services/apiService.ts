@@ -106,7 +106,6 @@ import type {
   ReviewsParams,
   ChatResponse,
   ChatRequest,
-  HighlightResponse,
   PendingFilesResponse,
   ProcessIngestionRequest,
   ProcessIngestionResponse,
@@ -195,20 +194,18 @@ export async function fetchDashboardSentiment(locationId: string, brand?: string
 }
 
 /**
- * Fetch dashboard highlight/alert for a specific location.
- * GET /api/dashboard/highlight
- * 
+ * Build the SSE streaming URL for highlight generation.
+ * GET /api/dashboard/highlight/stream
+ *
  * @param locationId - The location identifier (e.g., "JFK")
  * @param brand - Optional brand filter
- * @param refresh - When true, bypasses cache and generates a fresh analysis
- * @returns Promise resolving to HighlightResponse data
+ * @returns Full URL string for use with EventSource
  */
-export async function fetchDashboardHighlight(locationId: string, brand?: string, refresh?: boolean): Promise<HighlightResponse> {
+export function getHighlightStreamUrl(locationId: string, brand?: string): string {
   const params = new URLSearchParams();
-  if (locationId) params.set('location_id', locationId);
+  params.set('location_id', locationId);
   if (brand) params.set('brand', brand);
-  if (refresh === true) params.set('refresh', 'true');
-  return apiFetch<HighlightResponse>(`/api/dashboard/highlight?${params.toString()}`);
+  return `${BASE_URL}/api/dashboard/highlight/stream?${params.toString()}`;
 }
 
 /**

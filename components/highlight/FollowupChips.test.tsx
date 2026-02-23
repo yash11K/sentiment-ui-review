@@ -1,11 +1,15 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { FollowupChips } from './FollowupChips';
+
+const renderWithRouter = (ui: React.ReactElement) =>
+  render(<MemoryRouter>{ui}</MemoryRouter>);
 
 describe('FollowupChips', () => {
   it('should render a button for each question', () => {
     const questions = ['What about pricing?', 'How is the service?'];
-    render(
+    renderWithRouter(
       <FollowupChips questions={questions} onQuestionClick={vi.fn()} />
     );
 
@@ -16,7 +20,7 @@ describe('FollowupChips', () => {
 
   it('should call onQuestionClick with the question text when clicked', () => {
     const handleClick = vi.fn();
-    render(
+    renderWithRouter(
       <FollowupChips
         questions={['What about pricing?']}
         onQuestionClick={handleClick}
@@ -28,7 +32,7 @@ describe('FollowupChips', () => {
   });
 
   it('should disable all buttons when disabled is true', () => {
-    render(
+    renderWithRouter(
       <FollowupChips
         questions={['Q1', 'Q2']}
         onQuestionClick={vi.fn()}
@@ -43,7 +47,7 @@ describe('FollowupChips', () => {
   });
 
   it('should render nothing when questions array is empty', () => {
-    const { container } = render(
+    const { container } = renderWithRouter(
       <FollowupChips questions={[]} onQuestionClick={vi.fn()} />
     );
 

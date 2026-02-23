@@ -1,12 +1,11 @@
 /**
  * Tests for useHighlightData hook
  *
- * Tests the hook's ability to:
- * - Fetch highlight data on mount with refresh=false
- * - Refetch when locationId or brand changes
- * - Handle loading and refreshing states separately
- * - Handle errors gracefully
- * - Expose refetch() (cached) and refresh() (bypass cache) functions
+ * Tests the hook's SSE streaming behavior using a mock EventSource:
+ * - Streams highlight data on mount
+ * - Re-streams when locationId or brand changes
+ * - Handles streaming errors
+ * - Returns correct interface shape with streaming state
  *
  * Requirements: 1.1, 1.4, 3.4, 3.5
  */
@@ -14,235 +13,210 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useHighlightData } from './useHighlightData';
-import * as apiService from '../services/apiService';
-import type { HighlightResponse } from '../types/api';
 
 vi.mock('../services/apiService', () => ({
-  fetchDashboardHighlight: vi.fn(),
+  getHighlightStreamUrl: vi.fn(
+    (loc: string, brand?: string) =>
+      `http://localhost/stream?location_id=${loc}${brand ? `&brand=${brand}` : ''}`
+  ),
 }));
 
-const mockFetch = vi.mocked(apiService.fetchDashboardHighlight);
+/** Minimal EventSource mock that captures the onmessage handler */
+class MockEventSource {
+  static instances: MockEventSource[] = [];
+  url: string;
+  onmessage: ((event: MessageEvent) => void) | null = null;
+  onerror: (() => void) | null = null;
+  closed = false;
 
-const mockResponse: HighlightResponse = {
-  highlight: {
-    location_id: 'JFK',
-    brand: 'avis',
-    analysis: '**Wait times** are critically high.',
-    severity: 'critical',
-    followup_questions: ['What causes long waits?'],
-    citations: [{ text: 'Waited 2 hours...', location: {}, metadata: {} }],
-  },
-  cached: true,
-  generated_at: '2025-01-15T10:00:00Z',
-};
+  constructor(url: string) {
+    this.url = url;
+    MockEventSource.instances.push(this);
+  }
+
+  close(): void {
+    this.closed = true;
+  }
+
+  /** Helper to simulate the server sending an SSE event */
+  emit(data: unknown): void {
+    this.onmessage?.({ data: JSON.stringify(data) } as MessageEvent);
+  }
+}
+
+// Install mock globally
+const OriginalEventSource = globalThis.EventSource;
+
+beforeEach(() => {
+  MockEventSource.instances = [];
+  (globalThis as any).EventSource = MockEventSource;
+});
+
+afterEach(() => {
+  (globalThis as any).EventSource = OriginalEventSource;
+  vi.clearAllMocks();
+});
 
 describe('useHighlightData', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+  it('should open an EventSource on mount', () => {
+    renderHook(() => useHighlightData('JFK', 'avis'));
+
+    expect(MockEventSource.instances).toHaveLength(1);
+    expect(MockEventSource.instances[0].url).toContain('location_id=JFK');
+    expect(MockEventSource.instances[0].url).toContain('brand=avis');
   });
 
-  afterEach(() => {
-    vi.resetAllMocks();
-  });
-
-  it('should fetch data on mount with refresh=false', async () => {
-    mockFetch.mockResolvedValueOnce(mockResponse);
-
-    const { result } = renderHook(() => useHighlightData('JFK', 'avis'));
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    expect(mockFetch).toHaveBeenCalledTimes(1);
-    expect(mockFetch).toHaveBeenCalledWith('JFK', 'avis', false);
-    expect(result.current.data).toEqual(mockResponse);
-    expect(result.current.error).toBeNull();
-  });
-
-  it('should set isLoading=true while fetching', async () => {
-    let resolve: (v: HighlightResponse) => void;
-    mockFetch.mockReturnValueOnce(new Promise<HighlightResponse>((r) => { resolve = r; }));
-
+  it('should set isLoading=true while streaming', () => {
     const { result } = renderHook(() => useHighlightData('JFK'));
 
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(true);
-    });
-    expect(result.current.isRefreshing).toBe(false);
-
-    await act(async () => {
-      resolve!(mockResponse);
-    });
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
+    expect(result.current.isLoading).toBe(true);
+    expect(result.current.streaming.isStreaming).toBe(true);
   });
 
-  it('should refetch when locationId changes', async () => {
-    mockFetch.mockResolvedValue(mockResponse);
-
-    const { result, rerender } = renderHook(
-      ({ locationId, brand }) => useHighlightData(locationId, brand),
-      { initialProps: { locationId: 'JFK', brand: undefined as string | undefined } }
-    );
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    expect(mockFetch).toHaveBeenCalledWith('JFK', undefined, false);
-
-    rerender({ locationId: 'LAX', brand: undefined });
-
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith('LAX', undefined, false);
-    });
-  });
-
-  it('should refetch when brand changes', async () => {
-    mockFetch.mockResolvedValue(mockResponse);
-
-    const { result, rerender } = renderHook(
-      ({ locationId, brand }) => useHighlightData(locationId, brand),
-      { initialProps: { locationId: 'JFK', brand: undefined as string | undefined } }
-    );
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    rerender({ locationId: 'JFK', brand: 'budget' });
-
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith('JFK', 'budget', false);
-    });
-  });
-
-  it('should handle API errors', async () => {
-    const error = new Error('Network error');
-    mockFetch.mockRejectedValueOnce(error);
-
+  it('should accumulate streamed text from chunk events', async () => {
     const { result } = renderHook(() => useHighlightData('JFK'));
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    expect(result.current.error).toEqual(error);
-    expect(result.current.data).toBeNull();
-  });
-
-  it('should handle non-Error exceptions', async () => {
-    mockFetch.mockRejectedValueOnce('string error');
-
-    const { result } = renderHook(() => useHighlightData('JFK'));
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    expect(result.current.error).toBeInstanceOf(Error);
-    expect(result.current.error?.message).toBe('Failed to fetch highlight');
-  });
-
-  it('should not fetch when locationId is empty', async () => {
-    const { result } = renderHook(() => useHighlightData(''));
-
-    // Give it a tick to ensure no fetch was triggered
-    await act(async () => {});
-
-    expect(mockFetch).not.toHaveBeenCalled();
-    expect(result.current.isLoading).toBe(false);
-    expect(result.current.data).toBeNull();
-  });
-
-  it('should call API with refresh=false when refetch() is called', async () => {
-    mockFetch.mockResolvedValue(mockResponse);
-
-    const { result } = renderHook(() => useHighlightData('JFK'));
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    mockFetch.mockClear();
-
-    await act(async () => {
-      result.current.refetch();
-    });
-
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith('JFK', undefined, false);
-    });
-  });
-
-  it('should call API with refresh=true and set isRefreshing when refresh() is called', async () => {
-    mockFetch.mockResolvedValueOnce(mockResponse);
-
-    const { result } = renderHook(() => useHighlightData('JFK'));
-
-    await waitFor(() => {
-      expect(result.current.isLoading).toBe(false);
-    });
-
-    let resolveRefresh: (v: HighlightResponse) => void;
-    mockFetch.mockReturnValueOnce(new Promise<HighlightResponse>((r) => { resolveRefresh = r; }));
+    const es = MockEventSource.instances[0];
 
     act(() => {
-      result.current.refresh();
+      es.emit({ type: 'chunk', text: 'Hello ' });
+      es.emit({ type: 'chunk', text: 'world' });
     });
 
+    // Wait for debounced flush
     await waitFor(() => {
-      expect(result.current.isRefreshing).toBe(true);
+      expect(result.current.streaming.streamedText).toBe('Hello world');
     });
-    // isLoading should remain false during refresh
-    expect(result.current.isLoading).toBe(false);
-
-    const refreshedResponse: HighlightResponse = { ...mockResponse, cached: false };
-    await act(async () => {
-      resolveRefresh!(refreshedResponse);
-    });
-
-    await waitFor(() => {
-      expect(result.current.isRefreshing).toBe(false);
-    });
-    expect(result.current.data).toEqual(refreshedResponse);
-    expect(mockFetch).toHaveBeenCalledWith('JFK', undefined, true);
   });
 
-  it('should clear error on successful refetch after a failure', async () => {
-    mockFetch.mockRejectedValueOnce(new Error('fail'));
-
+  it('should update severity and followup questions from metadata event', () => {
     const { result } = renderHook(() => useHighlightData('JFK'));
+    const es = MockEventSource.instances[0];
+
+    act(() => {
+      es.emit({
+        type: 'metadata',
+        severity: 'critical',
+        followup_questions: ['Q1?', 'Q2?', 'Q3?'],
+      });
+    });
+
+    expect(result.current.streaming.severity).toBe('critical');
+    expect(result.current.streaming.followupQuestions).toEqual(['Q1?', 'Q2?', 'Q3?']);
+  });
+
+  it('should accumulate citations from citation events', () => {
+    const { result } = renderHook(() => useHighlightData('JFK'));
+    const es = MockEventSource.instances[0];
+
+    act(() => {
+      es.emit({
+        type: 'citation',
+        citations: [{ text: 'Source 1', location: {}, metadata: {} }],
+      });
+      es.emit({
+        type: 'citation',
+        citations: [{ text: 'Source 2', location: {}, metadata: {} }],
+      });
+    });
+
+    expect(result.current.streaming.citations).toHaveLength(2);
+  });
+
+  it('should build complete data on done event and stop streaming', async () => {
+    const { result } = renderHook(() => useHighlightData('JFK'));
+    const es = MockEventSource.instances[0];
+
+    act(() => {
+      es.emit({ type: 'chunk', text: 'Analysis text' });
+      es.emit({ type: 'metadata', severity: 'warning', followup_questions: ['Q1?'] });
+      es.emit({ type: 'citation', citations: [{ text: 'Src', location: {}, metadata: {} }] });
+      es.emit({ type: 'done' });
+    });
 
     await waitFor(() => {
-      expect(result.current.error).not.toBeNull();
+      expect(result.current.streaming.isStreaming).toBe(false);
     });
 
-    mockFetch.mockResolvedValueOnce(mockResponse);
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.data).not.toBeNull();
+    expect(result.current.data?.highlight?.analysis).toBe('Analysis text');
+    expect(result.current.data?.highlight?.severity).toBe('warning');
+    expect(result.current.data?.cached).toBe(false);
+    expect(es.closed).toBe(true);
+  });
 
-    await act(async () => {
-      result.current.refetch();
+  it('should set error on error event', () => {
+    const { result } = renderHook(() => useHighlightData('JFK'));
+    const es = MockEventSource.instances[0];
+
+    act(() => {
+      es.emit({ type: 'error', message: 'KB generation failed' });
     });
 
-    await waitFor(() => {
-      expect(result.current.error).toBeNull();
-      expect(result.current.data).toEqual(mockResponse);
+    expect(result.current.error?.message).toBe('KB generation failed');
+    expect(result.current.streaming.isStreaming).toBe(false);
+    expect(es.closed).toBe(true);
+  });
+
+  it('should set error on EventSource connection failure', () => {
+    const { result } = renderHook(() => useHighlightData('JFK'));
+    const es = MockEventSource.instances[0];
+
+    act(() => {
+      es.onerror?.();
     });
+
+    expect(result.current.error?.message).toBe('Stream connection failed');
+    expect(result.current.streaming.isStreaming).toBe(false);
+  });
+
+  it('should close old stream and open new one when locationId changes', () => {
+    const { rerender } = renderHook(
+      ({ loc }) => useHighlightData(loc),
+      { initialProps: { loc: 'JFK' } }
+    );
+
+    const firstEs = MockEventSource.instances[0];
+
+    rerender({ loc: 'LAX' });
+
+    expect(firstEs.closed).toBe(true);
+    expect(MockEventSource.instances).toHaveLength(2);
+    expect(MockEventSource.instances[1].url).toContain('location_id=LAX');
+  });
+
+  it('should not open EventSource when locationId is empty', () => {
+    const { result } = renderHook(() => useHighlightData(''));
+
+    expect(MockEventSource.instances).toHaveLength(0);
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it('should close EventSource on unmount', () => {
+    const { unmount } = renderHook(() => useHighlightData('JFK'));
+    const es = MockEventSource.instances[0];
+
+    unmount();
+
+    expect(es.closed).toBe(true);
   });
 
   it('should return correct interface shape', () => {
-    mockFetch.mockReturnValue(new Promise(() => {}));
-
     const { result } = renderHook(() => useHighlightData('JFK'));
 
     expect(result.current).toHaveProperty('data');
     expect(result.current).toHaveProperty('isLoading');
     expect(result.current).toHaveProperty('isRefreshing');
+    expect(result.current).toHaveProperty('streaming');
     expect(result.current).toHaveProperty('error');
     expect(typeof result.current.refresh).toBe('function');
     expect(typeof result.current.refetch).toBe('function');
+
+    expect(result.current.streaming).toMatchObject({
+      isStreaming: true,
+      severity: null,
+      followupQuestions: [],
+      citations: [],
+    });
   });
 });

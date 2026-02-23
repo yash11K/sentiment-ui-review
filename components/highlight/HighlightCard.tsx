@@ -1,8 +1,9 @@
 /**
  * HighlightCard Component
  *
- * AI-powered highlight analysis card for the dashboard. Renders markdown analysis,
- * severity-based styling, followup question chips, inline chat, and collapsible citations.
+ * AI-powered highlight analysis card for the dashboard. Supports two modes:
+ * 1. Cached: renders full analysis immediately from GET endpoint
+ * 2. Streaming: progressively renders markdown from SSE with skeleton metadata
  *
  * Requirements:
  * - 1.2: Render analysis as markdown with bold, paragraphs, headers
@@ -11,11 +12,11 @@
  * - 2.1-2.4: Severity-based visual styling (critical/warning/info)
  * - 3.1-3.5: Cache awareness, relative timestamp, refresh button
  * - 5.1: Collapsible citations section
- * - 6.1-6.4: Loading, error (502 vs generic), no-location states
- * - 7.1-7.2: Navigation link to /ai-analysis, inline followup responses
+ * - 6.1-6.4: Loading, error, no-location states
+ * - 7.1-7.2: Navigation link to /ai-analysis, followup chip navigation
  */
 
-import React from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Link } from 'react-router-dom';
@@ -80,9 +81,103 @@ const SEVERITY_CONFIG = {
   },
 } as const;
 
+const LOADING_PHRASES = [
+  'Synthesizing sentiment...',
+  'Contextualizing your query...',
+  'Aggregating customer feedback...',
+  'Parsing review linguistics...',
+  'Cross-referencing opinions...',
+  'Mining for insights...',
+  'Sifting through the archives...',
+  'Scanning 1,000+ opinions...',
+  'Uncovering hidden gems...',
+  'Reading between the lines...',
+  'Brewing some fresh insights...',
+  'Running a sentiment sweep...',
+];
+
+const FINAL_HEADING = 'What We Found';
+const CHAR_DELETE_SPEED = 35;
+const CHAR_TYPE_SPEED = 50;
+const PHRASE_HOLD_DURATION = 1800;
+const FINAL_TYPE_SPEED = 60;
+
 /**
- * Formats an ISO timestamp into a relative time string (e.g., "2 hours ago").
+ * Animated heading that cycles through loading phrases character-by-character,
+ * then settles on "What We Found" when loading completes.
  */
+function useAnimatedHeading(isLoading: boolean): string {
+  const [displayText, setDisplayText] = useState('');
+  const phaseRef = useRef<'typing' | 'holding' | 'deleting' | 'done'>('typing');
+  const targetRef = useRef(LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
+  const loadingDoneRef = useRef(false);
+  const charIndexRef = useRef(0);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!isLoading) {
+      loadingDoneRef.current = true;
+    }
+  }, [isLoading]);
+
+  const clearTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (phaseRef.current === 'done') return;
+
+    const tick = () => {
+      const phase = phaseRef.current;
+      const target = targetRef.current;
+
+      if (phase === 'typing') {
+        if (charIndexRef.current < target.length) {
+          charIndexRef.current += 1;
+          setDisplayText(target.slice(0, charIndexRef.current));
+          const speed = loadingDoneRef.current && target === FINAL_HEADING
+            ? FINAL_TYPE_SPEED : CHAR_TYPE_SPEED;
+          timerRef.current = setTimeout(tick, speed);
+        } else if (loadingDoneRef.current && target === FINAL_HEADING) {
+          phaseRef.current = 'done';
+        } else {
+          phaseRef.current = 'holding';
+          timerRef.current = setTimeout(tick, PHRASE_HOLD_DURATION);
+        }
+      } else if (phase === 'holding') {
+        phaseRef.current = 'deleting';
+        timerRef.current = setTimeout(tick, CHAR_DELETE_SPEED);
+      } else if (phase === 'deleting') {
+        if (charIndexRef.current > 0) {
+          charIndexRef.current -= 1;
+          setDisplayText(target.slice(0, charIndexRef.current));
+          timerRef.current = setTimeout(tick, CHAR_DELETE_SPEED);
+        } else {
+          if (loadingDoneRef.current) {
+            targetRef.current = FINAL_HEADING;
+          } else {
+            let next = LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)];
+            while (next === target) {
+              next = LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)];
+            }
+            targetRef.current = next;
+          }
+          phaseRef.current = 'typing';
+          timerRef.current = setTimeout(tick, CHAR_TYPE_SPEED);
+        }
+      }
+    };
+
+    timerRef.current = setTimeout(tick, CHAR_TYPE_SPEED);
+    return clearTimer;
+  }, [isLoading, clearTimer]);
+
+  return displayText;
+}
+
 function formatRelativeTime(isoTimestamp: string): string {
   const now = Date.now();
   const then = new Date(isoTimestamp).getTime();
@@ -103,7 +198,10 @@ function formatRelativeTime(isoTimestamp: string): string {
   return `${days} ${days === 1 ? 'day' : 'days'} ago`;
 }
 
-/** No location selected placeholder. Requirement 6.1 */
+// ============================================================================
+// Sub-components
+// ============================================================================
+
 const NoLocationState: React.FC = () => (
   <Card padding="lg">
     <div className="flex flex-col items-center justify-center gap-3 py-8 text-text-tertiary">
@@ -113,29 +211,7 @@ const NoLocationState: React.FC = () => (
   </Card>
 );
 
-/** Loading skeleton. Requirement 6.2 */
-const LoadingState: React.FC = () => (
-  <Card padding="lg">
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <Skeleton variant="rectangular" width={80} height={24} />
-        <Skeleton variant="rectangular" width={60} height={24} />
-      </div>
-      <div className="space-y-2">
-        <Skeleton variant="text" width="100%" height={16} />
-        <Skeleton variant="text" width="100%" height={16} />
-        <Skeleton variant="text" width="75%" height={16} />
-      </div>
-      <div className="flex items-center gap-2 text-text-tertiary text-sm">
-        <Sparkles size={14} className="animate-pulse" />
-        <span>Analyzing reviews...</span>
-      </div>
-    </div>
-  </Card>
-);
-
-/** Error state with retry. Requirements 6.3, 6.4 */
-const ErrorState: React.FC<{ error: Error; onRetry: () => void }> = ({ error, onRetry }) => {
+const HighlightErrorState: React.FC<{ error: Error; onRetry: () => void }> = ({ error, onRetry }) => {
   const is502 = error instanceof ApiError && error.statusCode === 502;
   const message = is502
     ? 'Failed to generate highlight from Knowledge Base'
@@ -154,7 +230,6 @@ const ErrorState: React.FC<{ error: Error; onRetry: () => void }> = ({ error, on
   );
 };
 
-/** Null highlight placeholder. Requirement 1.3 */
 const NullHighlightState: React.FC = () => (
   <Card padding="lg">
     <div className="flex flex-col items-center justify-center gap-3 py-8 text-text-tertiary">
@@ -164,29 +239,83 @@ const NullHighlightState: React.FC = () => (
   </Card>
 );
 
-/** Header section with location badge, brand pill, severity icon/label. Requirement 1.5 */
-const HighlightHeader: React.FC<{ highlight: HighlightData; brand?: string }> = ({
-  highlight,
-  brand,
-}) => {
-  const config = SEVERITY_CONFIG[highlight.severity];
-  const SeverityIcon = config.icon;
+/** Animated heading with Sparkles icon and bouncing dots */
+const AnimatedHeading: React.FC<{ isLoading: boolean }> = ({ isLoading }) => {
+  const headingText = useAnimatedHeading(isLoading);
+  const isDone = !isLoading && headingText === FINAL_HEADING;
 
   return (
-    <div className="flex items-center justify-between flex-wrap gap-2">
-      <div className="flex items-center gap-2">
-        <Badge variant="default">{highlight.location_id}</Badge>
-        {brand && <Badge variant="info">{brand}</Badge>}
+    <div className="flex items-center gap-2.5 mb-1">
+      <div className="w-7 h-7 rounded-none bg-gradient-to-tr from-accent-primary to-purple-600 flex items-center justify-center shrink-0">
+        <Sparkles size={14} className={cn('text-white', !isDone && 'animate-pulse')} />
       </div>
-      <div className={cn('flex items-center gap-1.5 text-sm font-medium', config.accentText)}>
-        <SeverityIcon size={16} />
-        <span>{config.label}</span>
+      <div className="flex items-center gap-2">
+        <span className={cn(
+          'text-lg font-semibold tracking-tight',
+          isDone ? 'text-text-primary' : 'text-accent-primary'
+        )}>
+          {headingText}
+        </span>
+        <span
+          className={cn(
+            'inline-block w-0.5 h-5 bg-accent-primary',
+            isDone ? 'opacity-0' : 'animate-pulse'
+          )}
+          aria-hidden="true"
+        />
+        {!isDone && (
+          <div className="flex items-center gap-1 ml-1">
+            <span className="w-1.5 h-1.5 bg-accent-primary/60 rounded-full animate-bounce" />
+            <span className="w-1.5 h-1.5 bg-accent-primary/60 rounded-full animate-bounce [animation-delay:0.15s]" />
+            <span className="w-1.5 h-1.5 bg-accent-primary/60 rounded-full animate-bounce [animation-delay:0.3s]" />
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-/** Footer with timestamp, cache indicator, refresh button, nav link. Requirements 3.1-3.5, 7.1 */
+/** Typing indicator shown at the end of streaming text */
+const TypingIndicator: React.FC = () => (
+  <span className="inline-flex items-center gap-1 ml-1 align-middle">
+    <span className="w-1.5 h-1.5 bg-accent-primary/60 rounded-full animate-bounce" />
+    <span className="w-1.5 h-1.5 bg-accent-primary/60 rounded-full animate-bounce [animation-delay:0.15s]" />
+    <span className="w-1.5 h-1.5 bg-accent-primary/60 rounded-full animate-bounce [animation-delay:0.3s]" />
+  </span>
+);
+
+/** Header: location badge, brand pill, severity (or skeleton if streaming without metadata yet) */
+const HighlightHeader: React.FC<{
+  locationId: string;
+  brand?: string;
+  severity: 'critical' | 'warning' | 'info' | null;
+}> = ({ locationId, brand, severity }) => {
+  const hasSeverity = severity !== null;
+  const config = hasSeverity ? SEVERITY_CONFIG[severity] : null;
+  const SeverityIcon = config?.icon;
+
+  return (
+    <div className="flex items-center justify-between flex-wrap gap-2">
+      <div className="flex items-center gap-2">
+        <Badge variant="default">{locationId}</Badge>
+        {brand && <Badge variant="info">{brand}</Badge>}
+      </div>
+      {hasSeverity && config && SeverityIcon ? (
+        <div className={cn(
+          'flex items-center gap-1.5 text-sm font-medium transition-opacity duration-300',
+          config.accentText
+        )}>
+          <SeverityIcon size={16} />
+          <span>{config.label}</span>
+        </div>
+      ) : (
+        <Skeleton variant="rectangular" width={80} height={20} />
+      )}
+    </div>
+  );
+};
+
+/** Footer with timestamp, cache indicator, refresh button, nav link */
 const HighlightFooter: React.FC<{
   generatedAt: string;
   cached: boolean;
@@ -230,71 +359,144 @@ const HighlightFooter: React.FC<{
   </div>
 );
 
+// ============================================================================
+// Main Component
+// ============================================================================
+
 export const HighlightCard: React.FC<HighlightCardProps> = ({ locationId, brand }) => {
-  const { data, isLoading, isRefreshing, error, refresh, refetch } = useHighlightData(locationId, brand);
+  const {
+    data, isLoading, isRefreshing, streaming, error, refresh, refetch,
+  } = useHighlightData(locationId, brand);
   const { messages, sendQuestion, isLoading: chatLoading } = useInlineChat();
 
-  // State: no location selected
+  // No location selected
   if (!locationId) {
     return <NoLocationState />;
   }
 
-  // State: loading (initial fetch, not refresh)
-  if (isLoading) {
-    return <LoadingState />;
+  // Error (only when not loading/streaming)
+  if (error && !isLoading && !streaming.isStreaming) {
+    return <HighlightErrorState error={error} onRetry={refetch} />;
   }
 
-  // State: error
-  if (error) {
-    return <ErrorState error={error} onRetry={refetch} />;
+  // Initial cached loading (no data yet, not streaming)
+  if (isLoading && !streaming.isStreaming) {
+    return (
+      <Card padding="lg">
+        <div className="space-y-4">
+          <AnimatedHeading isLoading={true} />
+          <div className="flex items-center gap-3">
+            <Skeleton variant="rectangular" width={80} height={24} />
+            <Skeleton variant="rectangular" width={60} height={24} />
+          </div>
+          <div className="space-y-2">
+            <Skeleton variant="text" width="100%" height={16} />
+            <Skeleton variant="text" width="100%" height={16} />
+            <Skeleton variant="text" width="75%" height={16} />
+          </div>
+        </div>
+      </Card>
+    );
   }
 
-  // State: null highlight
+  // Streaming mode — progressive rendering
+  if (streaming.isStreaming) {
+    const severityConfig = streaming.severity ? SEVERITY_CONFIG[streaming.severity] : null;
+
+    return (
+      <Card
+        padding="none"
+        className={cn(
+          'border-2',
+          severityConfig ? severityConfig.borderColor : 'border-accent-primary/20'
+        )}
+      >
+        <div className="p-6 space-y-4">
+          <AnimatedHeading isLoading={true} />
+
+          {/* Header with skeleton severity until metadata arrives */}
+          <HighlightHeader
+            locationId={locationId}
+            brand={brand}
+            severity={streaming.severity}
+          />
+
+          {/* Progressive markdown body with typing indicator */}
+          <div className="prose prose-sm max-w-none text-text-secondary">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {streaming.streamedText}
+            </ReactMarkdown>
+            <TypingIndicator />
+          </div>
+
+          {/* Followup chips: skeleton until metadata, then animate in */}
+          {streaming.followupQuestions.length > 0 ? (
+            <div className="animate-in fade-in duration-300">
+              <FollowupChips
+                questions={streaming.followupQuestions}
+                disabled={true}
+              />
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              <Skeleton variant="rectangular" width={200} height={32} />
+              <Skeleton variant="rectangular" width={180} height={32} />
+              <Skeleton variant="rectangular" width={220} height={32} />
+            </div>
+          )}
+
+          {/* Citations accumulate during stream */}
+          {streaming.citations.length > 0 && (
+            <CitationsSources citations={streaming.citations} />
+          )}
+        </div>
+      </Card>
+    );
+  }
+
+  // Null highlight (cached response with no data)
   if (!data || !data.highlight) {
     return <NullHighlightState />;
   }
 
+  // Full cached render
   const { highlight, cached, generated_at } = data;
   const config = SEVERITY_CONFIG[highlight.severity];
 
   return (
     <Card
       padding="none"
-      className={cn(
-        'border-2',
-        config.borderColor,
-        config.pulse && 'animate-pulse'
-      )}
+      className={cn('border-2', config.borderColor)}
     >
       <div className="p-6 space-y-4">
-        {/* Header */}
-        <HighlightHeader highlight={highlight} brand={brand} />
+        <AnimatedHeading isLoading={false} />
 
-        {/* Analysis body — markdown rendered. Requirement 1.2 */}
+        <HighlightHeader
+          locationId={highlight.location_id}
+          brand={brand}
+          severity={highlight.severity}
+        />
+
         <div className="prose prose-sm max-w-none text-text-secondary">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {highlight.analysis}
           </ReactMarkdown>
         </div>
 
-        {/* Followup chips. Requirement 4.1 */}
         <FollowupChips
           questions={highlight.followup_questions}
           onQuestionClick={sendQuestion}
           disabled={chatLoading}
         />
 
-        {/* Inline chat responses. Requirements 4.3-4.6 */}
         <InlineChat
           messages={messages}
           onSubmitQuestion={sendQuestion}
           isLoading={chatLoading}
         />
 
-        {/* Citations. Requirement 5.1 */}
         <CitationsSources citations={highlight.citations} />
 
-        {/* Footer */}
         <HighlightFooter
           generatedAt={generated_at}
           cached={cached}

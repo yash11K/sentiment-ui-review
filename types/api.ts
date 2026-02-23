@@ -395,6 +395,43 @@ export interface HighlightResponse {
 }
 
 // ============================================================================
+// Highlight Streaming SSE Event Types
+// GET /api/dashboard/highlight/stream
+// ============================================================================
+
+export interface HighlightChunkEvent {
+  type: 'chunk';
+  text: string;
+}
+
+export interface HighlightCitationEvent {
+  type: 'citation';
+  citations: HighlightCitation[];
+}
+
+export interface HighlightMetadataEvent {
+  type: 'metadata';
+  severity: 'critical' | 'warning' | 'info';
+  followup_questions: string[];
+}
+
+export interface HighlightDoneEvent {
+  type: 'done';
+}
+
+export interface HighlightErrorEvent {
+  type: 'error';
+  message: string;
+}
+
+export type HighlightStreamEvent =
+  | HighlightChunkEvent
+  | HighlightCitationEvent
+  | HighlightMetadataEvent
+  | HighlightDoneEvent
+  | HighlightErrorEvent;
+
+// ============================================================================
 // Ingestion API Types
 // ============================================================================
 
