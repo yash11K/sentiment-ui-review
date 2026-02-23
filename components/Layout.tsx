@@ -13,8 +13,9 @@ const Layout = () => {
   const { currentLocation, setLocation, selectedBrand, setSelectedBrand } = useStore();
   const { locations, isLoading: locationsLoading } = useLocations();
   
-  // Hide location selector on Reddit page
+  // Route-specific layout flags
   const isRedditPage = location.pathname === '/reddit';
+  const isAIAnalysisPage = location.pathname === '/ai-analysis';
 
   // Auto-select first location with brand "avis" when locations load and none is selected
   useEffect(() => {
@@ -122,7 +123,7 @@ const Layout = () => {
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 p-8 overflow-x-hidden">
+        <div className={`flex-1 overflow-x-hidden ${isAIAnalysisPage ? 'p-0' : 'p-8'}`}>
           <Outlet />
         </div>
       </main>

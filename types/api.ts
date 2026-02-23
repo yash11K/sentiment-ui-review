@@ -37,7 +37,7 @@ export interface DashboardSummary {
   average_rating: number;
   sentiment_breakdown: {
     negative: number;
-    neutral: number;
+    neutral?: number;
     positive: number;
   };
   rating_distribution: Record<string, number>;
@@ -153,7 +153,7 @@ export interface BrandMetrics {
   average_rating: number;
   sentiment_breakdown: {
     positive: number;
-    neutral: number;
+    neutral?: number;
     negative: number;
   };
   top_topics: Array<{ topic: string; count: number }>;
@@ -344,7 +344,7 @@ export interface StatsResponse {
   sentiment_breakdown: {
     positive: number;
     negative: number;
-    neutral: number;
+    neutral?: number;
   };
   rating_distribution: Record<string, number>;
   top_topics: Array<{
@@ -507,7 +507,7 @@ export interface RedditDashboardStats {
   sentiment_breakdown: {
     positive: number;
     negative: number;
-    neutral: number;
+    neutral?: number;
   };
   top_topics: Array<{
     topic: string;

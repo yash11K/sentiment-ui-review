@@ -36,7 +36,7 @@ export const RedditDashboardTab: React.FC<RedditDashboardTabProps> = ({ brand })
   // Transform sentiment data for pie chart
   const sentimentData = useMemo(() => {
     if (!stats?.sentiment_breakdown) return [];
-    const { positive, negative, neutral } = stats.sentiment_breakdown;
+    const { positive, negative, neutral = 0 } = stats.sentiment_breakdown;
     const total = positive + negative + neutral;
     if (total === 0) return [];
     
@@ -70,7 +70,7 @@ export const RedditDashboardTab: React.FC<RedditDashboardTabProps> = ({ brand })
   // Calculate positive percentage
   const positivePercentage = useMemo(() => {
     if (!stats?.sentiment_breakdown) return 0;
-    const { positive, negative, neutral } = stats.sentiment_breakdown;
+    const { positive, negative, neutral = 0 } = stats.sentiment_breakdown;
     const total = positive + negative + neutral;
     return total > 0 ? Math.round((positive / total) * 100) : 0;
   }, [stats]);

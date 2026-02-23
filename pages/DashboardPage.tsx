@@ -203,7 +203,7 @@ const DashboardPage = () => {
       if (!summary?.sentiment_breakdown) {
         return 0;
       }
-      const { positive, negative, neutral } = summary.sentiment_breakdown;
+      const { positive, negative, neutral = 0 } = summary.sentiment_breakdown;
       const total = positive + negative + neutral;
       if (total === 0) {
         return 0;

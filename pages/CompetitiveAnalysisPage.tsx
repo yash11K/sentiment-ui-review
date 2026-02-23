@@ -85,7 +85,7 @@ interface BrandScorecardProps {
 const BrandScorecard: React.FC<BrandScorecardProps> = ({ brand, marketAvg }) => {
   const diff = brand.average_rating - marketAvg;
   const diffLabel = diff >= 0 ? `+${diff.toFixed(2)}` : diff.toFixed(2);
-  const total = brand.sentiment_breakdown.positive + brand.sentiment_breakdown.neutral + brand.sentiment_breakdown.negative;
+  const total = (brand.sentiment_breakdown.positive ?? 0) + (brand.sentiment_breakdown.neutral ?? 0) + (brand.sentiment_breakdown.negative ?? 0);
   const posPct = total > 0 ? Math.round((brand.sentiment_breakdown.positive / total) * 100) : 0;
 
   return (
