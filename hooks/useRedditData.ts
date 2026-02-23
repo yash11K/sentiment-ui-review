@@ -7,22 +7,21 @@
 import { useEffect, useCallback, useRef, useState } from 'react';
 import {
   fetchRedditStats,
-  fetchRedditTrends,
+  fetchRedditTopicDistribution,
   fetchRedditPosts,
   fetchRedditSentiment,
 } from '../services/apiService';
 import type {
   RedditStatsResponse,
-  RedditTrendsResponse,
+  RedditTopicDistributionResponse,
   RedditPostsResponse,
   RedditSentimentResponse,
 } from '../types/api';
 
-export type RedditPeriod = 'day' | 'week' | 'month';
 
 interface UseRedditDataResult {
   stats: RedditStatsResponse | null;
-  trends: RedditTrendsResponse | null;
+  topicDistribution: RedditTopicDistributionResponse | null;
   posts: RedditPostsResponse | null;
   sentiment: RedditSentimentResponse | null;
   isLoading: boolean;
@@ -35,14 +34,13 @@ interface UseRedditDataResult {
  * Hook to fetch and manage Reddit data for a specific brand.
  * 
  * @param brand - The brand identifier (e.g., "avis")
- * @param period - The time period for trends ('day', 'week', 'month')
  * @returns Object containing Reddit data, loading state, error state, and refetch function
  */
-export function useRedditData(brand: string, period: RedditPeriod = 'week'): UseRedditDataResult {
+export function useRedditData(brand: string): UseRedditDataResult {
   const isMountedRef = useRef(true);
   
   const [stats, setStats] = useState<RedditStatsResponse | null>(null);
-  const [trends, setTrends] = useState<RedditTrendsResponse | null>(null);
+  const [topicDistribution, setTopicDistribution] = useState<RedditTopicDistributionResponse | null>(null);
   const [posts, setPosts] = useState<RedditPostsResponse | null>(null);
   const [sentiment, setSentiment] = useState<RedditSentimentResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -55,16 +53,16 @@ export function useRedditData(brand: string, period: RedditPeriod = 'week'): Use
     setError(null);
 
     try {
-      const [statsData, trendsData, postsData, sentimentData] = await Promise.all([
+      const [statsData, topicData, postsData, sentimentData] = await Promise.all([
         fetchRedditStats(brand),
-        fetchRedditTrends(brand, period),
+        fetchRedditTopicDistribution(brand),
         fetchRedditPosts(brand, undefined, 20),
         fetchRedditSentiment(brand),
       ]);
 
       if (isMountedRef.current) {
         setStats(statsData);
-        setTrends(trendsData);
+        setTopicDistribution(topicData);
         setPosts(postsData);
         setSentiment(sentimentData);
         setIsLoading(false);
@@ -76,7 +74,7 @@ export function useRedditData(brand: string, period: RedditPeriod = 'week'): Use
         setIsLoading(false);
       }
     }
-  }, [brand, period]);
+  }, [brand]);
 
   const fetchPostsFiltered = useCallback(async (subreddit?: string) => {
     if (!brand) return;
@@ -106,7 +104,7 @@ export function useRedditData(brand: string, period: RedditPeriod = 'week'): Use
 
   return {
     stats,
-    trends,
+    topicDistribution,
     posts,
     sentiment,
     isLoading,

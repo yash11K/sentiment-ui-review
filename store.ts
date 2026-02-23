@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { VisualizationTag, ChatMessage, Review } from './types';
-import { DashboardSummary, TrendsResponse, TopicsResponse, SentimentResponse, Location, HighlightResponse, Brand } from './types/api';
+import { DashboardSummary, TrendsResponse, TopicsResponse, SentimentResponse, Location, Brand } from './types/api';
 
 /**
  * Dashboard data structure for partial updates
@@ -10,7 +10,6 @@ interface DashboardData {
   trends?: TrendsResponse | null;
   topics?: TopicsResponse | null;
   sentiment?: SentimentResponse | null;
-  highlight?: HighlightResponse | null;
   loading?: boolean;
   error?: Error | null;
 }
@@ -49,7 +48,6 @@ interface AppState {
   dashboardTrends: TrendsResponse | null;
   dashboardTopics: TopicsResponse | null;
   dashboardSentiment: SentimentResponse | null;
-  dashboardHighlight: HighlightResponse | null;
   dashboardLoading: boolean;
   dashboardError: Error | null;
   setDashboardData: (data: Partial<DashboardData>) => void;
@@ -101,7 +99,6 @@ export const useStore = create<AppState>((set) => ({
   dashboardTrends: null,
   dashboardTopics: null,
   dashboardSentiment: null,
-  dashboardHighlight: null,
   dashboardLoading: false,
   dashboardError: null,
   setDashboardData: (data) => set((state) => ({
@@ -109,7 +106,6 @@ export const useStore = create<AppState>((set) => ({
     dashboardTrends: data.trends !== undefined ? data.trends : state.dashboardTrends,
     dashboardTopics: data.topics !== undefined ? data.topics : state.dashboardTopics,
     dashboardSentiment: data.sentiment !== undefined ? data.sentiment : state.dashboardSentiment,
-    dashboardHighlight: data.highlight !== undefined ? data.highlight : state.dashboardHighlight,
     dashboardLoading: data.loading !== undefined ? data.loading : state.dashboardLoading,
     dashboardError: data.error !== undefined ? data.error : state.dashboardError,
   })),

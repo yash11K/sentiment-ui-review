@@ -1,10 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
   Star, 
   MessageSquare, 
   SmilePlus, 
-  AlertTriangle, 
   ArrowRight,
   ChevronDown,
   Tag,
@@ -16,14 +14,13 @@ import {
 } from 'recharts';
 import { clsx } from 'clsx';
 import { Card } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
-import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
-import { Skeleton, SkeletonKPICard, SkeletonChartCard } from '../components/ui/Skeleton';
+import { SkeletonKPICard, SkeletonChartCard } from '../components/ui/Skeleton';
+import { HighlightCard } from '../components/highlight';
 import { useDashboardData, TrendsPeriod } from '../hooks/useDashboardData';
 import { useStore } from '../store';
-import type { TrendsResponse, TopicsResponse, SentimentResponse, HighlightResponse } from '../types/api';
+import type { TrendsResponse, TopicsResponse, SentimentResponse } from '../types/api';
 
 // Color palette for topics - Purple theme
 const TOPIC_COLORS = ['#7C3AED', '#8B5CF6', '#A78BFA', '#C4B5FD', '#6D28D9', '#5B21B6'];
@@ -164,8 +161,6 @@ function getPositivePercentage(sentiment: SentimentResponse | null): number {
 }
 
 const DashboardPage = () => {
-  const navigate = useNavigate();
-  
   // Get current location from store
   const currentLocation = useStore((state) => state.currentLocation);
   const selectedBrand = useStore((state) => state.selectedBrand);
@@ -175,7 +170,7 @@ const DashboardPage = () => {
   const [showPeriodDropdown, setShowPeriodDropdown] = useState(false);
   
   // Fetch dashboard data using the hook
-  const { summary, trends, topics, sentiment, highlight, isLoading, error, refetch } = useDashboardData(currentLocation, period);
+  const { summary, trends, topics, sentiment, isLoading, error, refetch } = useDashboardData(currentLocation, period);
   
   // Get current period label
   const currentPeriodLabel = PERIOD_OPTIONS.find(opt => opt.value === period)?.label || 'Weekly';
@@ -240,7 +235,7 @@ const DashboardPage = () => {
   }, [summary]);
 
   // Show error state with retry functionality (Requirement 3.6)
-  if (error && !summary && !trends && !topics && !sentiment && !highlight) {
+  if (error && !summary && !trends && !topics && !sentiment) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <ErrorState 
@@ -254,68 +249,8 @@ const DashboardPage = () => {
   return (
     <div className="space-y-6 animate-fade-in pb-10">
       
-      {/* Smart Alert Banner - Dynamic from API */}
-      {highlight === null && isLoading ? (
-        <div className="rounded-none bg-bg-elevated p-4 flex items-center gap-4 border-2 border-accent-primary/20">
-          <Skeleton variant="rounded" width={48} height={48} />
-          <div className="flex-1 space-y-2">
-            <Skeleton variant="text" width={200} height={20} />
-            <Skeleton variant="text" width="80%" height={14} />
-          </div>
-        </div>
-      ) : highlight?.highlight && (
-        <div className={clsx(
-          "rounded-none border-l-4 bg-bg-elevated p-4 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative overflow-hidden border-2",
-          highlight.highlight.severity === 'high' ? 'border-status-warning border-status-warning/30' : 
-          highlight.highlight.severity === 'medium' ? 'border-yellow-500 border-yellow-500/30' : 
-          'border-blue-500 border-blue-500/30'
-        )}>
-          <div className={clsx(
-            "absolute top-0 right-0 w-64 h-full bg-gradient-to-l to-transparent pointer-events-none",
-            highlight.highlight.severity === 'high' ? 'from-status-warning/10' : 
-            highlight.highlight.severity === 'medium' ? 'from-yellow-500/10' : 
-            'from-blue-500/10'
-          )} />
-          <div className="flex items-start gap-4 z-10">
-            <div className={clsx(
-              "p-2 rounded-none shrink-0",
-              highlight.highlight.severity === 'high' ? 'bg-status-warning/20 text-status-warning' : 
-              highlight.highlight.severity === 'medium' ? 'bg-yellow-500/20 text-yellow-500' : 
-              'bg-blue-500/20 text-blue-500'
-            )}>
-              <AlertTriangle size={24} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-bold text-text-primary">{highlight.highlight.headline}</h3>
-                <Badge variant={highlight.highlight.severity === 'high' ? 'warning' : highlight.highlight.severity === 'medium' ? 'default' : 'success'}>
-                  {highlight.highlight.severity.toUpperCase()} PRIORITY
-                </Badge>
-              </div>
-              <p className="text-text-secondary text-sm">
-                {highlight.highlight.description}
-              </p>
-            </div>
-          </div>
-          <Button 
-            variant="ghost" 
-            className={clsx(
-              "z-10 whitespace-nowrap",
-              highlight.highlight.severity === 'high' ? 'text-status-warning hover:text-status-warning hover:bg-status-warning/10' : 
-              highlight.highlight.severity === 'medium' ? 'text-yellow-500 hover:text-yellow-500 hover:bg-yellow-500/10' : 
-              'text-blue-500 hover:text-blue-500 hover:bg-blue-500/10'
-            )}
-            onClick={() => {
-              const query = selectedBrand
-                ? `${highlight.highlight.analysis_query} for ${selectedBrand}`
-                : highlight.highlight.analysis_query;
-              navigate('/ai-analysis?q=' + encodeURIComponent(query));
-            }}
-          >
-            View Analysis <ArrowRight size={16} className="ml-1" />
-          </Button>
-        </div>
-      )}
+      {/* AI Highlight Card */}
+      <HighlightCard locationId={currentLocation} brand={selectedBrand ?? undefined} />
 
       {/* Header Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-end sm:items-center gap-4">

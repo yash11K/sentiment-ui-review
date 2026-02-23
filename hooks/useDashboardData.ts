@@ -21,7 +21,6 @@ import {
   fetchDashboardTrends,
   fetchDashboardTopics,
   fetchDashboardSentiment,
-  fetchDashboardHighlight,
 } from '../services/apiService';
 import { useStore } from '../store';
 import type {
@@ -29,7 +28,6 @@ import type {
   TrendsResponse,
   TopicsResponse,
   SentimentResponse,
-  HighlightResponse,
 } from '../types/api';
 
 // Period type for trends data
@@ -43,7 +41,6 @@ interface UseDashboardDataResult {
   trends: TrendsResponse | null;
   topics: TopicsResponse | null;
   sentiment: SentimentResponse | null;
-  highlight: HighlightResponse | null;
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
@@ -71,7 +68,6 @@ export function useDashboardData(locationId: string, period: TrendsPeriod = DEFA
   const trends = useStore((state) => state.dashboardTrends);
   const topics = useStore((state) => state.dashboardTopics);
   const sentiment = useStore((state) => state.dashboardSentiment);
-  const highlight = useStore((state) => state.dashboardHighlight);
   const isLoading = useStore((state) => state.dashboardLoading);
   const error = useStore((state) => state.dashboardError);
   const selectedBrand = useStore((state) => state.selectedBrand);
@@ -104,7 +100,6 @@ export function useDashboardData(locationId: string, period: TrendsPeriod = DEFA
       trends: null,
       topics: null,
       sentiment: null,
-      highlight: null,
       loading: true,
       error: null,
     });
@@ -122,9 +117,6 @@ export function useDashboardData(locationId: string, period: TrendsPeriod = DEFA
       }),
       fetchDashboardSentiment(locationId, brand).then((data) => {
         if (isMountedRef.current) setDashboardData({ sentiment: data });
-      }),
-      fetchDashboardHighlight(locationId, brand).then((data) => {
-        if (isMountedRef.current) setDashboardData({ highlight: data });
       }),
     ]);
 
@@ -170,7 +162,6 @@ export function useDashboardData(locationId: string, period: TrendsPeriod = DEFA
     trends,
     topics,
     sentiment,
-    highlight,
     isLoading,
     error,
     refetch,

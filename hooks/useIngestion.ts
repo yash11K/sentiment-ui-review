@@ -77,8 +77,8 @@ export function useIngestion(): UseIngestionReturn {
 
     // Initial poll
     poll();
-    // Poll every 3 seconds
-    const interval = setInterval(poll, 3000);
+    // Poll every 30 seconds
+    const interval = setInterval(poll, 30000);
     pollingIntervals.current.set(jobId, interval);
   }, [refresh]);
 

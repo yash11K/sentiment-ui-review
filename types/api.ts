@@ -285,11 +285,10 @@ export interface ChatCitationLocation {
 
 /**
  * Chat Citation
- * Individual citation from the knowledge base
+ * Individual citation from the Bedrock Knowledge Base RetrieveAndGenerate API
  */
 export interface ChatCitation {
   text: string;
-  score: number;
   location: ChatCitationLocation;
   metadata?: Record<string, string>;
 }
@@ -301,7 +300,7 @@ export interface ChatCitation {
 export interface ChatResponse {
   answer: string;
   citations: ChatCitation[];
-  source: string;
+  session_id?: string;
 }
 
 // ============================================================================
@@ -326,8 +325,6 @@ export interface ReviewsParams {
  */
 export interface ChatRequest {
   query: string;
-  location_id: string;
-  use_semantic: boolean;
 }
 
 // ============================================================================
@@ -367,19 +364,33 @@ export interface InsightsResponse {
 }
 
 /**
+ * Citation source from the knowledge base supporting the AI analysis
+ */
+export interface HighlightCitation {
+  text: string;
+  location: Record<string, unknown>;
+  metadata: Record<string, unknown>;
+}
+
+/**
+ * AI-generated highlight data for a location/brand combination
+ */
+export interface HighlightData {
+  location_id: string;
+  brand: string;
+  analysis: string;
+  severity: 'critical' | 'warning' | 'info';
+  followup_questions: string[];
+  citations: HighlightCitation[];
+}
+
+/**
  * Dashboard Highlight Response
  * Returned by GET /api/dashboard/highlight
  */
 export interface HighlightResponse {
-  highlight: {
-    headline: string;
-    description: string;
-    severity: 'high' | 'medium' | 'low';
-    topic: string;
-    topic_label: string;
-    complaint_count: number;
-    analysis_query: string;
-  };
+  highlight: HighlightData | null;
+  cached: boolean;
   generated_at: string;
 }
 
@@ -535,20 +546,25 @@ export interface RedditStatsResponse {
 }
 
 /**
- * Reddit Trend Item
+ * Reddit Topic Distribution Item
  */
-export interface RedditTrendItem {
-  period: string;
-  mentions: number;
-  sentiment: number;
+export interface RedditTopicItem {
+  topic: string;
+  count: number;
+  avg_score: number;
+  sentiment_split: {
+    positive: number;
+    negative: number;
+    neutral: number;
+  };
 }
 
 /**
- * Reddit Trends Response
- * Returned by GET /api/reddit/trends?brand={brand}&period=week
+ * Reddit Topic Distribution Response
+ * Returned by GET /api/reddit/topic-distribution?brand={brand}
  */
-export interface RedditTrendsResponse {
-  trends: RedditTrendItem[];
+export interface RedditTopicDistributionResponse {
+  topics: RedditTopicItem[];
 }
 
 /**
@@ -562,7 +578,6 @@ export interface RedditPost {
   comments: number;
   sentiment: 'positive' | 'negative' | 'neutral';
   date: string;
-  url: string;
 }
 
 /**

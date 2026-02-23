@@ -2,15 +2,11 @@
  * Tests for useChat hook
  * 
  * Tests the hook's ability to:
- * - Send chat messages via API
+ * - Send chat messages via API (query only)
  * - Handle loading states
  * - Handle error states
  * - Add messages to the store
- * 
- * Requirements tested:
- * - 5.1: WHEN a user sends a chat message, THE System SHALL POST to /api/chat with query, location_id, and use_semantic parameters
- * - 5.3: WHILE waiting for a chat response, THE AI_Analysis_Page SHALL display a loading indicator
- * - 5.4: IF the chat request fails, THEN THE AI_Analysis_Page SHALL display an error message to the user
+ * - Map new citation format (text + location, no score)
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -26,12 +22,10 @@ vi.mock('../services/apiService', () => ({
 
 describe('useChat', () => {
   const mockSendChatMessage = vi.mocked(apiService.sendChatMessage);
-  const initialLocation = 'JFK Terminal 4';
 
   beforeEach(() => {
-    // Reset store state before each test
     useStore.setState({
-      currentLocation: initialLocation,
+      currentLocation: 'JFK Terminal 4',
       messages: [],
       isChatLoading: false,
     });
@@ -42,28 +36,25 @@ describe('useChat', () => {
     vi.resetAllMocks();
   });
 
-  it('should send chat message and add response to store (Requirement 5.1)', async () => {
-    // Arrange
+  it('should send chat message with query only and add response to store', async () => {
     const userQuery = 'What are the main complaints?';
     const mockResponse = {
       answer: 'The main complaints are about wait times and staff behavior.',
       citations: [],
-      source: 'test',
+      session_id: 'sess-123',
     };
     mockSendChatMessage.mockResolvedValueOnce(mockResponse);
 
-    // Act
     const { result } = renderHook(() => useChat());
 
     await act(async () => {
       await result.current.sendMessage(userQuery);
     });
 
-    // Assert - API was called with correct parameters
+    // API called with query only — no location_id or use_semantic
     expect(mockSendChatMessage).toHaveBeenCalledTimes(1);
-    expect(mockSendChatMessage).toHaveBeenCalledWith(userQuery, initialLocation, true);
+    expect(mockSendChatMessage).toHaveBeenCalledWith(userQuery);
 
-    // Assert - messages were added to store
     const storeState = useStore.getState();
     expect(storeState.messages).toHaveLength(2);
     expect(storeState.messages[0].role).toBe('user');
@@ -72,57 +63,47 @@ describe('useChat', () => {
     expect(storeState.messages[1].content).toBe(mockResponse.answer);
   });
 
-  it('should set loading state while waiting for response (Requirement 5.3)', async () => {
-    // Arrange
+  it('should set loading state while waiting for response', async () => {
     const userQuery = 'Test query';
-    let resolvePromise: (value: { answer: string; citations: never[]; source: string }) => void;
-    const pendingPromise = new Promise<{ answer: string; citations: never[]; source: string }>((resolve) => {
+    let resolvePromise: (value: any) => void;
+    const pendingPromise = new Promise<any>((resolve) => {
       resolvePromise = resolve;
     });
     mockSendChatMessage.mockReturnValueOnce(pendingPromise);
 
-    // Act
     const { result } = renderHook(() => useChat());
 
-    // Start sending message (don't await)
     let sendPromise: Promise<void>;
     act(() => {
       sendPromise = result.current.sendMessage(userQuery);
     });
 
-    // Assert - loading should be true while waiting
     await waitFor(() => {
       expect(result.current.isLoading).toBe(true);
     });
 
-    // Resolve the promise
     await act(async () => {
-      resolvePromise!({ answer: 'Response', citations: [], source: 'test' });
+      resolvePromise!({ answer: 'Response', citations: [], session_id: 'sess-1' });
       await sendPromise;
     });
 
-    // Assert - loading should be false after completion
     expect(result.current.isLoading).toBe(false);
   });
 
-  it('should handle error and display error message (Requirement 5.4)', async () => {
-    // Arrange
+  it('should handle error and display error message', async () => {
     const userQuery = 'Test query';
     const mockError = new Error('Network error');
     mockSendChatMessage.mockRejectedValueOnce(mockError);
 
-    // Act
     const { result } = renderHook(() => useChat());
 
     await act(async () => {
       await result.current.sendMessage(userQuery);
     });
 
-    // Assert - error should be set
     expect(result.current.error).toEqual(mockError);
     expect(result.current.isLoading).toBe(false);
 
-    // Assert - error message was added to chat
     const storeState = useStore.getState();
     expect(storeState.messages).toHaveLength(2);
     expect(storeState.messages[1].role).toBe('assistant');
@@ -131,96 +112,88 @@ describe('useChat', () => {
   });
 
   it('should handle non-Error exceptions', async () => {
-    // Arrange
-    const userQuery = 'Test query';
     mockSendChatMessage.mockRejectedValueOnce('String error');
 
-    // Act
     const { result } = renderHook(() => useChat());
 
     await act(async () => {
-      await result.current.sendMessage(userQuery);
+      await result.current.sendMessage('Test query');
     });
 
-    // Assert - should create an Error instance
     expect(result.current.error).toBeInstanceOf(Error);
     expect(result.current.error?.message).toBe('Failed to send chat message');
   });
 
   it('should not send empty messages', async () => {
-    // Arrange
     const { result } = renderHook(() => useChat());
 
-    // Act - try to send empty message
     await act(async () => {
       await result.current.sendMessage('');
     });
-
-    // Assert - API should not be called
     expect(mockSendChatMessage).not.toHaveBeenCalled();
 
-    // Act - try to send whitespace-only message
     await act(async () => {
       await result.current.sendMessage('   ');
     });
-
-    // Assert - API should still not be called
     expect(mockSendChatMessage).not.toHaveBeenCalled();
   });
 
-  it('should use current location from store', async () => {
-    // Arrange
-    const newLocation = 'LAX Terminal 1';
-    useStore.setState({ currentLocation: newLocation });
-    
-    const userQuery = 'Test query';
-    mockSendChatMessage.mockResolvedValueOnce({ answer: 'Response', citations: [], source: 'test' });
-
-    // Act
-    const { result } = renderHook(() => useChat());
-
-    await act(async () => {
-      await result.current.sendMessage(userQuery);
-    });
-
-    // Assert - API was called with the new location
-    expect(mockSendChatMessage).toHaveBeenCalledWith(userQuery, newLocation, true);
-  });
-
   it('should clear previous error when sending new message', async () => {
-    // Arrange
     const mockError = new Error('First error');
     mockSendChatMessage
       .mockRejectedValueOnce(mockError)
-      .mockResolvedValueOnce({ answer: 'Success', citations: [], source: 'test' });
+      .mockResolvedValueOnce({ answer: 'Success', citations: [], session_id: 'sess-2' });
 
-    // Act
     const { result } = renderHook(() => useChat());
 
-    // First message - should fail
     await act(async () => {
       await result.current.sendMessage('First query');
     });
-
     expect(result.current.error).toEqual(mockError);
 
-    // Second message - should succeed and clear error
     await act(async () => {
       await result.current.sendMessage('Second query');
     });
-
-    // Assert - error should be cleared
     expect(result.current.error).toBeNull();
   });
 
-  it('should return correct interface shape', async () => {
-    // Arrange
-    mockSendChatMessage.mockResolvedValueOnce({ answer: 'Test', citations: [], source: 'test' });
+  it('should map citations with new format (text + location, no score)', async () => {
+    const mockResponse = {
+      answer: 'Here are the insights.',
+      citations: [
+        {
+          text: 'Waited 2 hours in line at JFK...',
+          location: { type: 'S3', s3Location: { uri: 's3://bucket/reviews/JFK_avis_2026-01-15.json' } },
+          metadata: {},
+        },
+        {
+          text: 'Vehicle was dirty and scratched.',
+          location: { type: 'S3', s3Location: { uri: 's3://bucket/reviews/LAX_budget_2026-01-10.json' } },
+          metadata: {},
+        },
+      ],
+      session_id: 'sess-456',
+    };
+    mockSendChatMessage.mockResolvedValueOnce(mockResponse);
 
-    // Act
     const { result } = renderHook(() => useChat());
 
-    // Assert - verify the return type has all expected properties
+    await act(async () => {
+      await result.current.sendMessage('What are common complaints?');
+    });
+
+    const storeState = useStore.getState();
+    const assistantMsg = storeState.messages[1];
+    expect(assistantMsg.citations).toHaveLength(2);
+    expect(assistantMsg.citations![0].text).toBe('Waited 2 hours in line at JFK...');
+    expect(assistantMsg.citations![0].location).toBe('s3://bucket/reviews/JFK_avis_2026-01-15.json');
+    // No score property
+    expect(assistantMsg.citations![0]).not.toHaveProperty('score');
+  });
+
+  it('should return correct interface shape', () => {
+    const { result } = renderHook(() => useChat());
+
     expect(result.current).toHaveProperty('sendMessage');
     expect(result.current).toHaveProperty('isLoading');
     expect(result.current).toHaveProperty('error');
@@ -229,25 +202,19 @@ describe('useChat', () => {
   });
 
   it('should add user message before API call', async () => {
-    // Arrange
-    const userQuery = 'Test query';
-    let apiCallOrder = 0;
     let userMessageAddedBeforeApi = false;
 
     mockSendChatMessage.mockImplementationOnce(async () => {
-      apiCallOrder = useStore.getState().messages.length;
-      userMessageAddedBeforeApi = apiCallOrder >= 1;
-      return { answer: 'Response', citations: [], source: 'test' };
+      userMessageAddedBeforeApi = useStore.getState().messages.length >= 1;
+      return { answer: 'Response', citations: [], session_id: 'sess-3' };
     });
 
-    // Act
     const { result } = renderHook(() => useChat());
 
     await act(async () => {
-      await result.current.sendMessage(userQuery);
+      await result.current.sendMessage('Test query');
     });
 
-    // Assert - user message should be added before API call
     expect(userMessageAddedBeforeApi).toBe(true);
   });
 });

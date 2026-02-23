@@ -5,11 +5,10 @@ import {
   ThumbsUp,
   ThumbsDown,
   RefreshCw,
-  ExternalLink,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend, Line, ComposedChart,
+  PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import { clsx } from 'clsx';
 import { Card } from '../components/ui/Card';
@@ -22,7 +21,7 @@ import { useStore } from '../store';
 
 const SENTIMENT_COLORS: Record<string, string> = {
   Positive: '#10B981',
-  Neutral: '#6B7280',
+  Neutral: '#F59E0B',
   Negative: '#EF4444',
 };
 
@@ -39,7 +38,7 @@ const RedditPage = () => {
   const brand = selectedBrand || 'avis';
   const [selectedSubreddit, setSelectedSubreddit] = useState<string | null>(null);
 
-  const { stats, trends, posts, sentiment, isLoading, error, refetch, fetchPosts } = useRedditData(brand);
+  const { stats, topicDistribution, posts, sentiment, isLoading, error, refetch, fetchPosts } = useRedditData(brand);
 
   const handleSubredditFilter = (subreddit: string | null) => {
     setSelectedSubreddit(subreddit);
@@ -60,6 +59,22 @@ const RedditPage = () => {
       color: SENTIMENT_COLORS[s.name] ?? '#6B7280',
     }));
   }, [sentiment]);
+
+  // Topic distribution horizontal bar chart data
+  const topicChartData = useMemo(() => {
+    if (!topicDistribution?.topics) return [];
+    return topicDistribution.topics
+      .slice()
+      .sort((a, b) => b.count - a.count)
+      .map((t) => ({
+        topic: t.topic,
+        positive: t.sentiment_split.positive,
+        negative: t.sentiment_split.negative,
+        neutral: t.sentiment_split.neutral,
+        avg_score: t.avg_score,
+        count: t.count,
+      }));
+  }, [topicDistribution]);
 
   if (isLoading) {
     return (
@@ -162,27 +177,42 @@ const RedditPage = () => {
 
       {/* Row 2 — Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Mention Trends */}
+        {/* Topic Distribution */}
         <Card className="min-h-[350px] flex flex-col">
           <div className="mb-6">
-            <h3 className="font-bold text-lg text-text-primary">Mention Trends</h3>
-            <p className="text-text-tertiary text-sm">Weekly mention count with sentiment overlay</p>
+            <h3 className="font-bold text-lg text-text-primary">Topic Distribution</h3>
+            <p className="text-text-tertiary text-sm">Topics by post count, segmented by sentiment</p>
           </div>
           <div className="flex-1 w-full min-h-[250px]">
-            {trends?.trends && trends.trends.length > 0 ? (
+            {topicChartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={trends.trends} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
-                  <XAxis dataKey="period" axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12 }} />
-                  <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{ fill: '#6B7280' }} />
-                  <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{ fill: '#6B7280' }} unit="%" />
-                  <Tooltip contentStyle={{ backgroundColor: '#1F2937', borderColor: '#7C3AED', borderWidth: 2, color: '#F9FAFB' }} />
-                  <Bar yAxisId="left" dataKey="mentions" name="Mentions" fill="#7C3AED" radius={[0, 0, 0, 0]} barSize={36} />
-                  <Line yAxisId="right" type="monotone" dataKey="sentiment" name="Sentiment %" stroke="#10B981" strokeWidth={2} dot={{ r: 4, fill: '#10B981' }} />
-                </ComposedChart>
+                <BarChart data={topicChartData} layout="vertical" margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" horizontal={false} />
+                  <XAxis type="number" axisLine={false} tickLine={false} tick={{ fill: '#6B7280' }} />
+                  <YAxis
+                    type="category"
+                    dataKey="topic"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: '#6B7280', fontSize: 12 }}
+                    width={120}
+                  />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#1F2937', borderColor: '#7C3AED', borderWidth: 2, color: '#F9FAFB' }}
+                    formatter={(value: number, name: string) => [value, name]}
+                    labelFormatter={(label: string) => {
+                      const item = topicChartData.find((t) => t.topic === label);
+                      return `${label} (avg score: ${item?.avg_score?.toFixed(1) ?? '—'})`;
+                    }}
+                  />
+                  <Legend verticalAlign="bottom" height={36} iconType="square" />
+                  <Bar dataKey="negative" name="Negative" stackId="sentiment" fill="#EF4444" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="neutral" name="Neutral" stackId="sentiment" fill="#F59E0B" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="positive" name="Positive" stackId="sentiment" fill="#10B981" radius={[0, 0, 0, 0]} />
+                </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-text-tertiary">No trend data available</div>
+              <div className="flex items-center justify-center h-full text-text-tertiary">No topic data available</div>
             )}
           </div>
         </Card>
@@ -274,17 +304,7 @@ const RedditPage = () => {
               ) : (
                 sortedPosts.map((post) => (
                   <tr key={post.id} className="border-b border-accent-primary/10 hover:bg-bg-hover transition-colors">
-                    <td className="px-4 py-3">
-                      <a
-                        href={post.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-text-primary hover:text-accent-primary transition-colors flex items-center gap-1.5 group"
-                      >
-                        <span>{post.title}</span>
-                        <ExternalLink size={12} className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </a>
-                    </td>
+                    <td className="px-4 py-3 text-text-primary">{post.title}</td>
                     <td className="px-4 py-3 text-text-secondary">{post.subreddit}</td>
                     <td className="px-4 py-3 text-right font-mono text-text-primary">{post.score}</td>
                     <td className="px-4 py-3 text-right font-mono text-text-primary">{post.comments}</td>

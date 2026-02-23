@@ -35,7 +35,6 @@ export interface TopicData {
 
 export interface ChatCitation {
   text: string;
-  score: number;
   location?: string;
 }
 

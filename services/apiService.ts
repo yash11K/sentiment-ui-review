@@ -8,7 +8,7 @@
  */
 
 // Configuration
-const BASE_URL = 'http://54.90.177.97:80';
+const BASE_URL = 'http://localhost:8000';
 const DEFAULT_TIMEOUT = 30000;
 
 /**
@@ -196,14 +196,18 @@ export async function fetchDashboardSentiment(locationId: string, brand?: string
 
 /**
  * Fetch dashboard highlight/alert for a specific location.
+ * GET /api/dashboard/highlight
  * 
  * @param locationId - The location identifier (e.g., "JFK")
+ * @param brand - Optional brand filter
+ * @param refresh - When true, bypasses cache and generates a fresh analysis
  * @returns Promise resolving to HighlightResponse data
  */
-export async function fetchDashboardHighlight(locationId: string, brand?: string): Promise<HighlightResponse> {
+export async function fetchDashboardHighlight(locationId: string, brand?: string, refresh?: boolean): Promise<HighlightResponse> {
   const params = new URLSearchParams();
   if (locationId) params.set('location_id', locationId);
   if (brand) params.set('brand', brand);
+  if (refresh === true) params.set('refresh', 'true');
   return apiFetch<HighlightResponse>(`/api/dashboard/highlight?${params.toString()}`);
 }
 
@@ -337,24 +341,18 @@ export async function fetchReviews(params: ReviewsParams): Promise<ReviewsRespon
 
 /**
  * Send a chat message to the AI analysis endpoint.
+ * Uses Bedrock Knowledge Base RetrieveAndGenerate API on the backend.
  * 
- * Requirement 5.1: WHEN a user sends a chat message, THE System SHALL POST to /api/chat
- * with query, location_id, and use_semantic parameters
+ * POST /api/chat
  * 
  * @param query - The user's chat message/question
- * @param locationId - The location identifier (e.g., "JFK")
- * @param useSemantic - Optional flag to enable semantic search (defaults to true)
  * @returns Promise resolving to ChatResponse data
  */
 export async function sendChatMessage(
-  query: string,
-  locationId: string,
-  useSemantic: boolean = true
+  query: string
 ): Promise<ChatResponse> {
   const requestBody: ChatRequest = {
     query,
-    location_id: locationId,
-    use_semantic: useSemantic,
   };
 
   return apiFetch<ChatResponse>('/api/chat', {
@@ -507,7 +505,7 @@ export async function fetchMarketPosition(locationId: string): Promise<MarketPos
 import type { RedditDashboardStats } from '../types/api';
 import type {
   RedditStatsResponse,
-  RedditTrendsResponse,
+  RedditTopicDistributionResponse,
   RedditPostsResponse,
   RedditSentimentResponse,
 } from '../types/api';
@@ -537,16 +535,15 @@ export async function fetchRedditStats(brand: string): Promise<RedditStatsRespon
 }
 
 /**
- * Fetch Reddit mention trends for a brand.
- * GET /api/reddit/trends?brand={brand}&period={period}
+ * Fetch Reddit topic distribution for a brand.
+ * GET /api/reddit/topic-distribution?brand={brand}
  */
-export async function fetchRedditTrends(
-  brand: string,
-  period: string = 'week'
-): Promise<RedditTrendsResponse> {
-  return apiFetch<RedditTrendsResponse>(
-    `/api/reddit/trends?brand=${encodeURIComponent(brand)}&period=${encodeURIComponent(period)}`
-  );
+export async function fetchRedditTopicDistribution(
+  brand?: string
+): Promise<RedditTopicDistributionResponse> {
+  const params = new URLSearchParams();
+  if (brand) params.set('brand', brand);
+  return apiFetch<RedditTopicDistributionResponse>(`/api/reddit/topic-distribution?${params.toString()}`);
 }
 
 /**
