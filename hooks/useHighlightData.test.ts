@@ -13,6 +13,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { useHighlightData } from './useHighlightData';
+import { useStore } from '../store';
 
 vi.mock('../services/apiService', () => ({
   getHighlightStreamUrl: vi.fn(
@@ -50,6 +51,12 @@ const OriginalEventSource = globalThis.EventSource;
 beforeEach(() => {
   MockEventSource.instances = [];
   (globalThis as any).EventSource = MockEventSource;
+  // Reset highlight cache in store so tests always stream fresh
+  useStore.setState({
+    highlightData: null,
+    highlightLocationId: '',
+    highlightBrand: '',
+  });
 });
 
 afterEach(() => {

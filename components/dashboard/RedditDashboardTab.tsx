@@ -172,8 +172,10 @@ export const RedditDashboardTab: React.FC<RedditDashboardTabProps> = ({ brand })
                   <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 11 }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6B7280' }} />
                   <Tooltip 
-                    cursor={{ fill: '#FFF7ED' }}
-                    contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#F97316', borderWidth: 2 }} 
+                    cursor={{ fill: 'rgba(124, 58, 237, 0.08)' }}
+                    contentStyle={{ backgroundColor: '#1F1F1F', borderColor: '#7C3AED', borderWidth: 2, color: '#F9FAFB', borderRadius: 0 }} 
+                    itemStyle={{ color: '#F9FAFB' }}
+                    labelStyle={{ color: '#F9FAFB' }}
                   />
                   <Bar dataKey="count" name="Mentions" radius={[0, 0, 0, 0]} barSize={40}>
                     {topicsData.map((entry, index) => (
@@ -214,7 +216,7 @@ export const RedditDashboardTab: React.FC<RedditDashboardTabProps> = ({ brand })
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#F97316', borderWidth: 2 }} />
+                    <Tooltip contentStyle={{ backgroundColor: '#1F1F1F', borderColor: '#7C3AED', borderWidth: 2, color: '#F9FAFB', borderRadius: 0 }} itemStyle={{ color: '#F9FAFB' }} />
                     <Legend verticalAlign="bottom" height={36} iconType="circle" />
                   </PieChart>
                 </ResponsiveContainer>
@@ -256,7 +258,10 @@ export const RedditDashboardTab: React.FC<RedditDashboardTabProps> = ({ brand })
                   width={90}
                 />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#7C3AED', borderWidth: 2 }} 
+                  cursor={{ fill: 'rgba(124, 58, 237, 0.08)' }}
+                  contentStyle={{ backgroundColor: '#1F1F1F', borderColor: '#7C3AED', borderWidth: 2, color: '#F9FAFB', borderRadius: 0 }} 
+                  itemStyle={{ color: '#F9FAFB' }}
+                  labelStyle={{ color: '#F9FAFB' }}
                 />
                 <Bar dataKey="count" name="Posts" radius={[0, 0, 0, 0]} barSize={20}>
                   {subredditData.map((entry, index) => (

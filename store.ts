@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { VisualizationTag, ChatMessage, Review } from './types';
-import { DashboardSummary, TrendsResponse, TopicsResponse, SentimentResponse, Location, Brand } from './types/api';
+import { DashboardSummary, TrendsResponse, TopicsResponse, SentimentResponse, Location, Brand, HighlightResponse } from './types/api';
 
 /**
  * Dashboard data structure for partial updates
@@ -61,6 +61,13 @@ interface AppState {
   setReviews: (reviews: Review[]) => void;
   setReviewsLoading: (loading: boolean) => void;
   setReviewsError: (error: Error | null) => void;
+
+  // Highlight Cache State
+  highlightData: HighlightResponse | null;
+  highlightLocationId: string;
+  highlightBrand: string;
+  setHighlightCache: (data: HighlightResponse | null, locationId: string, brand: string) => void;
+  clearHighlightCache: () => void;
 }
 
 export const useStore = create<AppState>((set) => ({
@@ -119,4 +126,19 @@ export const useStore = create<AppState>((set) => ({
   setReviews: (reviews) => set({ reviews }),
   setReviewsLoading: (loading) => set({ reviewsLoading: loading }),
   setReviewsError: (error) => set({ reviewsError: error }),
+
+  // Highlight Cache State
+  highlightData: null,
+  highlightLocationId: '',
+  highlightBrand: '',
+  setHighlightCache: (data, locationId, brand) => set({
+    highlightData: data,
+    highlightLocationId: locationId,
+    highlightBrand: brand,
+  }),
+  clearHighlightCache: () => set({
+    highlightData: null,
+    highlightLocationId: '',
+    highlightBrand: '',
+  }),
 }));

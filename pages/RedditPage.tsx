@@ -1,14 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import {
   MessageCircle,
-  TrendingUp,
+
   ThumbsUp,
   ThumbsDown,
   RefreshCw,
 } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend,
+  PieChart, Pie, Cell, Legend, Sector,
 } from 'recharts';
 import { clsx } from 'clsx';
 import { Card } from '../components/ui/Card';
@@ -83,8 +83,8 @@ const RedditPage = () => {
           <Skeleton variant="text" width={300} height={32} />
           <Skeleton variant="rounded" width={160} height={40} />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => <SkeletonKPICard key={i} />)}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[...Array(3)].map((_, i) => <SkeletonKPICard key={i} />)}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <SkeletonChartCard height={300} />
@@ -124,7 +124,7 @@ const RedditPage = () => {
       </div>
 
       {/* Row 1 — KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-5 hover:border-orange-500 transition-colors group">
           <div className="flex justify-between items-start mb-4">
             <div className="p-3 rounded-none bg-orange-500/10 group-hover:scale-110 transition-transform">
@@ -161,29 +161,17 @@ const RedditPage = () => {
           </h4>
         </Card>
 
-        <Card className="p-5 hover:border-accent-primary transition-colors group">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-3 rounded-none bg-accent-primary/10 group-hover:scale-110 transition-transform">
-              <TrendingUp className="text-accent-primary" size={24} />
-            </div>
-          </div>
-          <p className="text-text-tertiary text-sm font-medium">Trending Score</p>
-          <h4 className="text-3xl font-bold font-display mt-1">
-            {stats?.trending_score != null ? `${stats.trending_score}` : '--'}
-            <span className="text-base font-normal text-text-tertiary"> / 10</span>
-          </h4>
-        </Card>
       </div>
 
       {/* Row 2 — Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Topic Distribution */}
-        <Card className="min-h-[350px] flex flex-col">
+        <Card className="flex flex-col">
           <div className="mb-6">
             <h3 className="font-bold text-lg text-text-primary">Topic Distribution</h3>
             <p className="text-text-tertiary text-sm">Topics by post count, segmented by sentiment</p>
           </div>
-          <div className="flex-1 w-full min-h-[250px]">
+          <div className="w-full" style={{ height: Math.max(300, topicChartData.length * 45 + 80) }}>
             {topicChartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={topicChartData} layout="vertical" margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
@@ -196,9 +184,14 @@ const RedditPage = () => {
                     tickLine={false}
                     tick={{ fill: '#6B7280', fontSize: 12 }}
                     width={120}
+                    interval={0}
                   />
                   <Tooltip
-                    contentStyle={{ backgroundColor: '#1F2937', borderColor: '#7C3AED', borderWidth: 2, color: '#F9FAFB' }}
+                    wrapperStyle={{ outline: 'none' }}
+                    contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#7C3AED', borderWidth: 2, color: '#1F1F1F', borderRadius: 0 }}
+                    itemStyle={{ color: '#4B5563' }}
+                    labelStyle={{ color: '#1F1F1F' }}
+                    cursor={{ fill: 'rgba(124, 58, 237, 0.08)' }}
                     formatter={(value: number, name: string) => [value, name]}
                     labelFormatter={(label: string) => {
                       const item = topicChartData.find((t) => t.topic === label);
@@ -236,12 +229,34 @@ const RedditPage = () => {
                     paddingAngle={4}
                     dataKey="value"
                     nameKey="name"
+                    activeShape={(props: any) => {
+                      const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill } = props;
+                      return (
+                        <Sector
+                          cx={cx}
+                          cy={cy}
+                          innerRadius={innerRadius - 2}
+                          outerRadius={outerRadius + 6}
+                          startAngle={startAngle}
+                          endAngle={endAngle}
+                          fill={fill}
+                          stroke="#7C3AED"
+                          strokeWidth={2}
+                        />
+                      );
+                    }}
                   >
                     {donutData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number) => `${value}%`} contentStyle={{ backgroundColor: '#1F2937', borderColor: '#7C3AED', borderWidth: 2, color: '#F9FAFB' }} />
+                  <Tooltip
+                    wrapperStyle={{ outline: 'none' }}
+                    contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#7C3AED', borderWidth: 2, color: '#1F1F1F', borderRadius: 0 }}
+                    itemStyle={{ color: '#4B5563' }}
+                    labelStyle={{ color: '#1F1F1F' }}
+                    formatter={(value: number) => `${value}%`}
+                  />
                   <Legend verticalAlign="bottom" height={36} iconType="circle" />
                 </PieChart>
               </ResponsiveContainer>

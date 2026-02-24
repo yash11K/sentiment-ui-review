@@ -14,7 +14,7 @@ export const FollowupChips: React.FC<FollowupChipsProps> = ({
   questions,
   onQuestionClick,
   disabled = false,
-  navigateToChat = true,
+  navigateToChat = false,
 }) => {
   const navigate = useNavigate();
 

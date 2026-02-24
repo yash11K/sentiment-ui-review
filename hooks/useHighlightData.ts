@@ -13,6 +13,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getHighlightStreamUrl } from '../services/apiService';
+import { useStore } from '../store';
 import type {
   HighlightResponse,
   HighlightCitation,
@@ -61,6 +62,12 @@ export function useHighlightData(locationId: string, brand?: string): UseHighlig
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const [streaming, setStreaming] = useState<StreamingState>(INITIAL_STREAMING);
+
+  // Store cache selectors
+  const cachedHighlight = useStore((state) => state.highlightData);
+  const cachedLocationId = useStore((state) => state.highlightLocationId);
+  const cachedBrand = useStore((state) => state.highlightBrand);
+  const setHighlightCache = useStore((state) => state.setHighlightCache);
 
   const isMountedRef = useRef(true);
   const eventSourceRef = useRef<EventSource | null>(null);
@@ -164,6 +171,7 @@ export function useHighlightData(locationId: string, brand?: string): UseHighlig
                 generated_at: new Date().toISOString(),
               };
               setData(completeResponse);
+              setHighlightCache(completeResponse, locationId, brand || '');
               hasDataRef.current = true;
               return { ...prev, isStreaming: false };
             });
@@ -208,9 +216,28 @@ export function useHighlightData(locationId: string, brand?: string): UseHighlig
     startStream(hasDataRef.current);
   }, [startStream]);
 
-  // Stream on mount and when locationId or brand changes
+  // Stream on mount and when locationId or brand changes.
+  // If the store has cached data for the same params, use it instead of re-streaming.
   useEffect(() => {
     isMountedRef.current = true;
+
+    const normalizedBrand = brand || '';
+    const cacheHit =
+      cachedHighlight !== null &&
+      cachedLocationId === locationId &&
+      cachedBrand === normalizedBrand;
+
+    if (cacheHit) {
+      setData(cachedHighlight);
+      hasDataRef.current = true;
+      setIsLoading(false);
+      setStreaming(INITIAL_STREAMING);
+      return () => {
+        isMountedRef.current = false;
+        closeStream();
+      };
+    }
+
     hasDataRef.current = false;
     setData(null);
     startStream(false);
@@ -219,7 +246,7 @@ export function useHighlightData(locationId: string, brand?: string): UseHighlig
       isMountedRef.current = false;
       closeStream();
     };
-  }, [locationId, brand, startStream, closeStream]);
+  }, [locationId, brand, startStream, closeStream, cachedHighlight, cachedLocationId, cachedBrand]);
 
   return {
     data,

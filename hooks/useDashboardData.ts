@@ -62,6 +62,8 @@ interface UseDashboardDataResult {
 export function useDashboardData(locationId: string, period: TrendsPeriod = DEFAULT_TRENDS_PERIOD): UseDashboardDataResult {
   // Track if component is mounted to prevent state updates after unmount
   const isMountedRef = useRef(true);
+  // Track last fetched params to skip redundant fetches on re-mount
+  const lastFetchedRef = useRef<string>('');
   
   // Get store state
   const summary = useStore((state) => state.dashboardSummary);
@@ -93,6 +95,7 @@ export function useDashboardData(locationId: string, period: TrendsPeriod = DEFA
     }
 
     const brand = selectedBrand ?? undefined;
+    const cacheKey = `${locationId}|${selectedBrand ?? ''}|${period}`;
 
     // Requirement 3.5: Set loading state and clear stale data
     setDashboardData({
@@ -133,29 +136,41 @@ export function useDashboardData(locationId: string, period: TrendsPeriod = DEFA
       setDashboardError(errorInstance);
     }
 
+    // Store the cache key so we can skip refetch on re-mount
+    lastFetchedRef.current = cacheKey;
     setDashboardLoading(false);
   }, [locationId, period, selectedBrand, setDashboardData, setDashboardLoading, setDashboardError]);
 
   /**
-   * Refetch function for retry functionality.
+   * Refetch function for retry / manual refresh.
+   * Always fetches fresh data regardless of cache.
    * Requirement 3.6: Offer retry functionality
    */
   const refetch = useCallback(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  // Fetch data on mount and when locationId changes
+  // Fetch data on mount and when locationId/period/brand changes.
+  // Skip if we already fetched for the same params (cache hit on re-mount).
   // Requirement 3.7: Refetch when location changes
   useEffect(() => {
     isMountedRef.current = true;
-    
+
+    const cacheKey = `${locationId}|${selectedBrand ?? ''}|${period}`;
+    const hasData = summary !== null || trends !== null || topics !== null || sentiment !== null;
+
+    if (lastFetchedRef.current === cacheKey && hasData) {
+      return () => { isMountedRef.current = false; };
+    }
+
     fetchDashboardData();
 
     // Cleanup function to prevent state updates on unmounted component
     return () => {
       isMountedRef.current = false;
     };
-  }, [fetchDashboardData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationId, period, selectedBrand, fetchDashboardData]);
 
   return {
     summary,

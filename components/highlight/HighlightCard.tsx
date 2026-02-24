@@ -40,10 +40,10 @@ import { Skeleton } from '../ui/Skeleton';
 import { FollowupChips } from './FollowupChips';
 import { InlineChat } from './InlineChat';
 import { CitationsSources } from './CitationsSources';
+import { ColorCodedAnalysis } from './ColorCodedAnalysis';
 import { useHighlightData } from '../../hooks/useHighlightData';
 import { useInlineChat } from '../../hooks/useInlineChat';
 import { ApiError } from '../../services/apiService';
-import type { HighlightData } from '../../types/api';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -477,11 +477,7 @@ export const HighlightCard: React.FC<HighlightCardProps> = ({ locationId, brand 
           severity={highlight.severity}
         />
 
-        <div className="prose prose-sm max-w-none text-text-secondary">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {highlight.analysis}
-          </ReactMarkdown>
-        </div>
+        <ColorCodedAnalysis analysis={highlight.analysis} animate={true} />
 
         <FollowupChips
           questions={highlight.followup_questions}

@@ -107,6 +107,7 @@ describe('useDashboardData', () => {
       dashboardSentiment: null,
       dashboardLoading: false,
       dashboardError: null,
+      selectedBrand: null,
     });
     vi.clearAllMocks();
   });
