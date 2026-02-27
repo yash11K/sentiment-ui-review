@@ -413,7 +413,10 @@ export interface HighlightMetadataEvent {
   type: 'metadata';
   severity: 'critical' | 'warning' | 'info';
   followup_questions: string[];
+  cached: boolean;
+  generated_at: string;
 }
+
 
 export interface HighlightDoneEvent {
   type: 'done';

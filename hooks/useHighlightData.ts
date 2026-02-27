@@ -27,6 +27,8 @@ export interface StreamingState {
   severity: 'critical' | 'warning' | 'info' | null;
   followupQuestions: string[];
   citations: HighlightCitation[];
+  cached: boolean;
+  generatedAt: string | null;
 }
 
 export interface UseHighlightDataResult {
@@ -54,6 +56,8 @@ const INITIAL_STREAMING: StreamingState = {
   severity: null,
   followupQuestions: [],
   citations: [],
+  cached: false,
+  generatedAt: null,
 };
 
 export function useHighlightData(locationId: string, brand?: string): UseHighlightDataResult {
@@ -112,9 +116,11 @@ export function useHighlightData(locationId: string, brand?: string): UseHighlig
       severity: null,
       followupQuestions: [],
       citations: [],
+      cached: false,
+      generatedAt: null,
     });
 
-    const url = getHighlightStreamUrl(locationId, brand);
+    const url = getHighlightStreamUrl(locationId, brand, isRefresh);
     const es = new EventSource(url);
     eventSourceRef.current = es;
 
@@ -150,6 +156,8 @@ export function useHighlightData(locationId: string, brand?: string): UseHighlig
               ...prev,
               severity: parsed.severity,
               followupQuestions: parsed.followup_questions,
+              cached: parsed.cached,
+              generatedAt: parsed.generated_at,
             }));
             break;
 
@@ -167,8 +175,8 @@ export function useHighlightData(locationId: string, brand?: string): UseHighlig
                   followup_questions: prev.followupQuestions,
                   citations: prev.citations,
                 },
-                cached: false,
-                generated_at: new Date().toISOString(),
+                cached: prev.cached,
+                generated_at: prev.generatedAt || new Date().toISOString(),
               };
               setData(completeResponse);
               setHighlightCache(completeResponse, locationId, brand || '');

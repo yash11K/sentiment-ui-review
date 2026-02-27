@@ -8,7 +8,7 @@
  */
 
 // Configuration
-const BASE_URL = 'http://54.90.177.97:80';
+const BASE_URL = 'http://54.210.217.58:80';
 const DEFAULT_TIMEOUT = 30000;
 
 /**
@@ -201,12 +201,19 @@ export async function fetchDashboardSentiment(locationId: string, brand?: string
  * @param brand - Optional brand filter
  * @returns Full URL string for use with EventSource
  */
-export function getHighlightStreamUrl(locationId: string, brand?: string): string {
+export /**
+ * Build the SSE stream URL for highlight analysis.
+ * GET /api/dashboard/highlight/stream
+ * @param noCache - When true, bypasses backend cache and forces a fresh Bedrock call.
+ */
+function getHighlightStreamUrl(locationId: string, brand?: string, noCache?: boolean): string {
   const params = new URLSearchParams();
   params.set('location_id', locationId);
   if (brand) params.set('brand', brand);
+  if (noCache) params.set('no_cache', 'true');
   return `${BASE_URL}/api/dashboard/highlight/stream?${params.toString()}`;
 }
+
 
 /**
  * Fetch recent reviews for a specific location.

@@ -104,11 +104,15 @@ describe('useHighlightData', () => {
         type: 'metadata',
         severity: 'critical',
         followup_questions: ['Q1?', 'Q2?', 'Q3?'],
+        cached: true,
+        generated_at: '2026-02-27T10:30:00.000000',
       });
     });
 
     expect(result.current.streaming.severity).toBe('critical');
     expect(result.current.streaming.followupQuestions).toEqual(['Q1?', 'Q2?', 'Q3?']);
+    expect(result.current.streaming.cached).toBe(true);
+    expect(result.current.streaming.generatedAt).toBe('2026-02-27T10:30:00.000000');
   });
 
   it('should accumulate citations from citation events', () => {
@@ -135,7 +139,7 @@ describe('useHighlightData', () => {
 
     act(() => {
       es.emit({ type: 'chunk', text: 'Analysis text' });
-      es.emit({ type: 'metadata', severity: 'warning', followup_questions: ['Q1?'] });
+      es.emit({ type: 'metadata', severity: 'warning', followup_questions: ['Q1?'], cached: false, generated_at: '2026-02-27T12:00:00.000000' });
       es.emit({ type: 'citation', citations: [{ text: 'Src', location: {}, metadata: {} }] });
       es.emit({ type: 'done' });
     });
@@ -224,6 +228,8 @@ describe('useHighlightData', () => {
       severity: null,
       followupQuestions: [],
       citations: [],
+      cached: false,
+      generatedAt: null,
     });
   });
 });
